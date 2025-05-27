@@ -65,12 +65,24 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         console.log('AuthContext: Initializing auth...')
-        
         // Получаем текущую сессию
         const { data: { session }, error } = await supabase.auth.getSession()
-        
+
         if (error) {
           console.error('AuthContext: Error getting session:', error)
+          // --- PATCH: обработка битой сессии ---
+          if (
+            error.message?.includes('JWT') ||
+            error.message?.includes('token') ||
+            error.status === 401
+          ) {
+            await supabase.auth.signOut()
+            // Удаляем только ключи Supabase из localStorage
+            Object.keys(localStorage)
+              .filter(key => key.startsWith('sb-'))
+              .forEach(key => localStorage.removeItem(key))
+            toast.error('Ваша сессия истекла. Пожалуйста, войдите снова.')
+          }
           if (isMounted) {
             setUser(null)
             setProfile(null)
@@ -90,6 +102,12 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('AuthContext: Error initializing auth:', error)
+        // --- PATCH: обработка битой сессии ---
+        await supabase.auth.signOut()
+        Object.keys(localStorage)
+          .filter(key => key.startsWith('sb-'))
+          .forEach(key => localStorage.removeItem(key))
+        toast.error('Ваша сессия истекла. Пожалуйста, войдите снова.')
         if (isMounted) {
           setUser(null)
           setProfile(null)
