@@ -37,7 +37,7 @@ export const CartProvider = ({ children }) => {
         .from('cart_items')
         .select(`
           *,
-          product:products(*),
+          product:products(*, brand:brands(*), category:categories(*), images:product_images(*)),
           size:sizes(*)
         `)
         .eq('user_id', user.id)
@@ -102,7 +102,7 @@ export const CartProvider = ({ children }) => {
             })
             .select(`
               *,
-              product:products(*),
+              product:products(*, brand:brands(*), category:categories(*), images:product_images(*)),
               size:sizes(*)
             `)
             .single()
@@ -113,10 +113,10 @@ export const CartProvider = ({ children }) => {
         }
       } else {
         // Для неавторизованных пользователей
-        // Сначала нужно получить информацию о товаре
+        // Получаем информацию о товаре
         const { data: product } = await supabase
           .from('products')
-          .select('*')
+          .select('*, brand:brands(*), category:categories(*), images:product_images(*)')
           .eq('id', productId)
           .single()
 
@@ -270,6 +270,8 @@ export const CartProvider = ({ children }) => {
     getCartItem,
     loadCart
   }
+
+  console.log('CartContext state:', { isCartOpen, cartItems: cartItems.length })
 
   return (
     <CartContext.Provider value={value}>

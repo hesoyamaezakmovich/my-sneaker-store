@@ -10,9 +10,27 @@ import CartDrawer from '../cart/CartDrawer'
 const Header = () => {
   const navigate = useNavigate()
   const { user, setIsAuthModalOpen } = useAuth() || {}
-  const { getTotalItems, isCartOpen, setIsCartOpen } = useCart()
+  const cartContext = useCart()
+  console.log('Header - Cart context:', cartContext)
+  
+  const { cartItems, getTotalItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart } = cartContext || {}
   const { favorites } = useFavorites() || { favorites: [] }
-  const totalItems = getTotalItems()
+  const totalItems = getTotalItems ? getTotalItems() : 0
+
+  console.log('Header - isCartOpen:', isCartOpen)
+
+  const handleCheckout = () => {
+    navigate('/checkout')
+    setIsCartOpen(false)
+  }
+
+  const handleChangeQuantity = (item, newQuantity) => {
+    updateQuantity(item.id, newQuantity)
+  }
+
+  const handleRemove = (item) => {
+    removeFromCart(item.id)
+  }
 
   return (
     <>
@@ -40,7 +58,10 @@ const Header = () => {
                 </span>
               )}
             </div>
-            <div className="relative cursor-pointer group" onClick={() => setIsCartOpen(true)}>
+            <div className="relative cursor-pointer group" onClick={() => {
+              console.log('Cart icon clicked, opening drawer...')
+              setIsCartOpen(true)
+            }}>
               <ShoppingCart className="w-7 h-7 text-gray-700 group-hover:text-black transition" />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full px-1.5 shadow-lg border-2 border-white">
@@ -59,7 +80,14 @@ const Header = () => {
         </div>
       </header>
       <AuthModal />
-      <CartDrawer />
+      <CartDrawer 
+        cartItems={cartItems}
+        onChangeQuantity={handleChangeQuantity}
+        onRemove={handleRemove}
+        onCheckout={handleCheckout}
+        open={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+      />
     </>
   )
 }

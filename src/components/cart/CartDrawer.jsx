@@ -4,6 +4,8 @@ import CartSummary from './CartSummary'
 import { ShoppingCart } from 'lucide-react'
 
 const CartDrawer = ({ cartItems = [], onChangeQuantity, onRemove, onCheckout, open, onClose }) => {
+  console.log('CartDrawer render:', { open, itemsCount: cartItems.length })
+  
   return (
     <div className={`fixed inset-0 z-50 transition ${open ? '' : 'pointer-events-none'}`}>
       {/* Overlay */}

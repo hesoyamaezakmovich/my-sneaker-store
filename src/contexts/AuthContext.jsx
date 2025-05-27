@@ -10,47 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
 
-  // Проверяем текущую сессию при загрузке
-  useEffect(() => {
-    checkUser()
-    
-    // Подписываемся на изменения состояния аутентификации
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN') {
-          await checkUser()
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setProfile(null)
-        }
-      }
-    )
-
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
-  }, [])
-
-  // Проверка текущего пользователя
-  const checkUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      console.log('AuthContext: checkUser supabase.auth.getUser() =', user)
-      if (user) {
-        setUser(user)
-        await loadProfile(user.id, user.email)
-      } else {
-        setUser(null)
-        setProfile(null)
-      }
-    } catch (error) {
-      console.error('AuthContext: Error checking user:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Загрузка профиля пользователя
+  // Загрузка профиля пользователя - определяем ДО использования
   const loadProfile = async (userId, email) => {
     try {
       const { data, error } = await supabase
@@ -75,6 +35,64 @@ export const AuthProvider = ({ children }) => {
       toast.error('Ошибка загрузки профиля')
     }
   }
+
+  // Проверка текущего пользователя
+  const checkUser = async () => {
+    try {
+      // Сначала проверяем сессию
+      const { data: { session } } = await supabase.auth.getSession()
+      console.log('AuthContext: checkUser session =', session)
+      
+      if (session?.user) {
+        setUser(session.user)
+        await loadProfile(session.user.id, session.user.email)
+      } else {
+        // Если нет сессии, пробуем получить пользователя
+        const { data: { user } } = await supabase.auth.getUser()
+        console.log('AuthContext: checkUser supabase.auth.getUser() =', user)
+        if (user) {
+          setUser(user)
+          await loadProfile(user.id, user.email)
+        } else {
+          setUser(null)
+          setProfile(null)
+        }
+      }
+    } catch (error) {
+      console.error('AuthContext: Error checking user:', error)
+      // Не сбрасываем пользователя при ошибке
+      if (error.message?.includes('JWT')) {
+        // Только если токен истек
+        setUser(null)
+        setProfile(null)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Проверяем текущую сессию при загрузке
+  useEffect(() => {
+    checkUser()
+    
+    // Подписываемся на изменения состояния аутентификации
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session)
+        if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user)
+          await loadProfile(session.user.id, session.user.email)
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null)
+          setProfile(null)
+        }
+      }
+    )
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [])
 
   // Регистрация
   const signUp = async (email, password, additionalData = {}) => {
@@ -101,7 +119,9 @@ export const AuthProvider = ({ children }) => {
             ...additionalData
           })
 
-        if (profileError) throw profileError
+        if (profileError && profileError.code !== '23505') { // Игнорируем ошибку дубликата
+          console.error('Error creating profile:', profileError)
+        }
       }
 
       toast.success('Регистрация успешна! Проверьте email для подтверждения.')
@@ -124,7 +144,11 @@ export const AuthProvider = ({ children }) => {
         password
       })
       if (error) throw error
+      
+      // Ждем немного, чтобы сессия установилась
+      await new Promise(resolve => setTimeout(resolve, 100))
       await checkUser()
+      
       toast.success('Вы успешно вошли в систему!')
       setIsAuthModalOpen(false)
       return { data, error: null }

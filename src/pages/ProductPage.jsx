@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import ProductDetails from '../components/product/ProductDetails'
 import { fetchProductById } from '../services/products.service'
+import { useAuth } from '../hooks/useAuth'
+import { useCart } from '../hooks/useCart'
 import Button from '../components/ui/Button'
-import toast from 'react-hot-toast'
 
 const ProductPage = () => {
   const { id } = useParams()
+  const { user, setIsAuthModalOpen } = useAuth()
+  const { addToCart } = useCart()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -17,8 +20,17 @@ const ProductPage = () => {
       .finally(() => setLoading(false))
   }, [id])
 
-  const handleAddToCart = (product, sizeId) => {
-    toast(`Добавить в корзину: ${product.name}, размер: ${product.sizes.find(s => s.id === sizeId)?.size?.size_value}`)
+  const handleAddToCart = async (product, sizeId) => {
+    if (!user) {
+      setIsAuthModalOpen(true)
+      return
+    }
+    
+    try {
+      await addToCart(product.id, sizeId, 1)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+    }
   }
 
   if (loading) {

@@ -1,15 +1,32 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const ProductCard = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => {
   const navigate = useNavigate()
+  const [selectedSize, setSelectedSize] = useState(null)
   const mainImage = product.images?.find(img => img.is_primary) || product.images?.[0]
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation()
+    if (!selectedSize) {
+      toast.error('Выберите размер')
+      return
+    }
+    onAddToCart(product, selectedSize)
+  }
+
+  const handleCardClick = () => {
+    navigate(`/product/${product.id}`)
+  }
+
+  const availableSizes = product.sizes?.filter(s => s.quantity > 0) || []
 
   return (
     <div
-      className="group bg-white rounded-3xl border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-200 p-6 flex flex-col relative cursor-pointer overflow-hidden hover:-translate-y-1 min-h-[380px]"
-      onClick={() => navigate(`/product/${product.id}`)}
+      className="group bg-white rounded-3xl border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-200 p-6 flex flex-col relative cursor-pointer overflow-hidden hover:-translate-y-1 min-h-[420px]"
+      onClick={handleCardClick}
     >
       <button
         className={`absolute top-4 right-4 z-10 text-gray-300 hover:text-red-500 transition-colors bg-white/80 rounded-full p-1 shadow ${isFavorite ? 'text-red-500' : ''}`}
@@ -30,11 +47,38 @@ const ProductCard = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => 
           <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">{product.brand?.name}</div>
           <div className="font-bold text-lg mb-1 line-clamp-2 text-gray-900 leading-tight">{product.name}</div>
         </div>
-        <div className="flex items-center justify-between mt-4">
+        
+        {/* Селектор размеров */}
+        <div className="mb-3" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-wrap gap-1">
+            {availableSizes.map((sizeItem) => (
+              <button
+                key={sizeItem.id}
+                className={`px-2 py-1 text-xs rounded border transition-all ${
+                  selectedSize === sizeItem.size_id
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedSize(sizeItem.size_id)
+                }}
+              >
+                {sizeItem.size?.size_value}
+              </button>
+            ))}
+          </div>
+          {availableSizes.length === 0 && (
+            <p className="text-xs text-gray-500 mt-1">Нет в наличии</p>
+          )}
+        </div>
+        
+        <div className="flex items-center justify-between">
           <div className="text-xl font-extrabold text-gray-900">{product.price} ₽</div>
           <button
-            className="bg-black text-white rounded-full px-5 py-2 text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black"
-            onClick={e => { e.stopPropagation(); onAddToCart(product) }}
+            className="bg-black text-white rounded-full px-5 py-2 text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleAddToCart}
+            disabled={availableSizes.length === 0}
           >
             В корзину
           </button>
