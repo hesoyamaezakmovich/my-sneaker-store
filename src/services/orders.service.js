@@ -12,7 +12,16 @@ export const createOrder = async (order, items) => {
   if (orderError) throw new Error(handleSupabaseError(orderError))
 
   // Добавляем позиции заказа
-  const orderItems = items.map(item => ({ ...item, order_id: orderData.id }))
+  const orderItems = items.map(item => ({
+    order_id: orderData.id,
+    product_id: item.product_id,
+    size_id: item.size_id,
+    quantity: item.quantity,
+    price: item.product?.price || 0,
+    product_name: item.product?.name || '',
+    product_image: item.product?.image_url || '',
+    size_value: item.size?.size_value || ''
+  }))
   const { error: itemsError } = await supabase
     .from('order_items')
     .insert(orderItems)
