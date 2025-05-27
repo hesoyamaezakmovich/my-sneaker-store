@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 // Получаем переменные окружения
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development'
 
 // Проверяем наличие переменных
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -14,7 +15,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    // Для Vercel важно правильно настроить URL
+    flowType: 'pkce'
+  },
+  // Для продакшена на Vercel
+  global: {
+    headers: {
+      'x-application-name': 'bro-shop'
+    }
   }
 })
 

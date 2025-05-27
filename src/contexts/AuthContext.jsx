@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react'
+import React, { createContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
 import toast from 'react-hot-toast'
 
@@ -10,75 +10,112 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
 
-  // Загрузка профиля пользователя - определяем ДО использования
-  const loadProfile = async (userId, email) => {
+  // Мемоизированная функция загрузки профиля
+  const loadProfile = useCallback(async (userId, email) => {
     try {
+      console.log('AuthContext: Loading profile for user:', userId)
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
-      console.log('AuthContext: loadProfile result:', { data, error })
+      
+      console.log('AuthContext: Profile query result:', { data, error })
+      
       if (error && error.code === 'PGRST116') {
-        // Профиль не найден — создаём!
+        // Профиль не найден — создаём
+        console.log('AuthContext: Creating new profile')
         const { error: insertError } = await supabase
           .from('profiles')
           .insert({ id: userId, email })
-        if (insertError) throw insertError
+        
+        if (insertError) {
+          console.error('AuthContext: Error creating profile:', insertError)
+          throw insertError
+        }
+        
         // Повторно загружаем профиль
-        return await loadProfile(userId, email)
+        const { data: newProfileData, error: newProfileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        
+        if (newProfileError) throw newProfileError
+        setProfile(newProfileData)
+        console.log('AuthContext: Profile created successfully')
+        return
       }
+      
       if (error) throw error
       setProfile(data)
+      console.log('AuthContext: Profile loaded successfully')
     } catch (error) {
       console.error('AuthContext: Error loading profile:', error)
-      toast.error('Ошибка загрузки профиля')
+      // Не показываем toast при каждой ошибке загрузки профиля
+      // toast.error('Ошибка загрузки профиля')
     }
-  }
+  }, [])
 
-  // Проверка текущего пользователя
-  const checkUser = async () => {
-    try {
-      // Сначала проверяем сессию
-      const { data: { session } } = await supabase.auth.getSession()
-      console.log('AuthContext: checkUser session =', session)
-      
-      if (session?.user) {
-        setUser(session.user)
-        await loadProfile(session.user.id, session.user.email)
-      } else {
-        // Если нет сессии, пробуем получить пользователя
-        const { data: { user } } = await supabase.auth.getUser()
-        console.log('AuthContext: checkUser supabase.auth.getUser() =', user)
-        if (user) {
-          setUser(user)
-          await loadProfile(user.id, user.email)
-        } else {
+  // Инициализация пользователя при загрузке приложения
+  useEffect(() => {
+    let isMounted = true
+
+    const initializeAuth = async () => {
+      try {
+        console.log('AuthContext: Initializing auth...')
+        
+        // Получаем текущую сессию
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('AuthContext: Error getting session:', error)
+          if (isMounted) {
+            setUser(null)
+            setProfile(null)
+            setLoading(false)
+          }
+          return
+        }
+
+        if (session?.user && isMounted) {
+          console.log('AuthContext: Session found, setting user')
+          setUser(session.user)
+          await loadProfile(session.user.id, session.user.email)
+        } else if (isMounted) {
+          console.log('AuthContext: No session found')
           setUser(null)
           setProfile(null)
         }
+      } catch (error) {
+        console.error('AuthContext: Error initializing auth:', error)
+        if (isMounted) {
+          setUser(null)
+          setProfile(null)
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-    } catch (error) {
-      console.error('AuthContext: Error checking user:', error)
-      // Не сбрасываем пользователя при ошибке
-      if (error.message?.includes('JWT')) {
-        // Только если токен истек
-        setUser(null)
-        setProfile(null)
-      }
-    } finally {
-      setLoading(false)
     }
-  }
 
-  // Проверяем текущую сессию при загрузке
+    initializeAuth()
+
+    return () => {
+      isMounted = false
+    }
+  }, [loadProfile])
+
+  // Подписка на изменения состояния аутентификации
   useEffect(() => {
-    checkUser()
+    console.log('AuthContext: Setting up auth state listener')
     
-    // Подписываемся на изменения состояния аутентификации
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session)
+        console.log('AuthContext: Auth state changed:', event, !!session?.user)
+        
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user)
           await loadProfile(session.user.id, session.user.email)
@@ -86,19 +123,19 @@ export const AuthProvider = ({ children }) => {
           setUser(null)
           setProfile(null)
         }
+        // Не меняем loading здесь, так как он уже управляется в initializeAuth
       }
     )
 
     return () => {
-      authListener.subscription.unsubscribe()
+      console.log('AuthContext: Cleaning up auth state listener')
+      subscription.unsubscribe()
     }
-  }, [])
+  }, [loadProfile])
 
   // Регистрация
   const signUp = async (email, password, additionalData = {}) => {
     try {
-      setLoading(true)
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -109,82 +146,50 @@ export const AuthProvider = ({ children }) => {
 
       if (error) throw error
 
-      // Создаем профиль пользователя
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            ...additionalData
-          })
-
-        if (profileError && profileError.code !== '23505') { // Игнорируем ошибку дубликата
-          console.error('Error creating profile:', profileError)
-        }
-      }
-
       toast.success('Регистрация успешна! Проверьте email для подтверждения.')
       return { data, error: null }
     } catch (error) {
-      console.error('Error signing up:', error)
+      console.error('AuthContext: Error signing up:', error)
       toast.error(error.message || 'Ошибка регистрации')
       return { data: null, error }
-    } finally {
-      setLoading(false)
     }
   }
 
   // Вход
   const signIn = async (email, password) => {
     try {
-      setLoading(true)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
-      if (error) throw error
       
-      // Ждем немного, чтобы сессия установилась
-      await new Promise(resolve => setTimeout(resolve, 100))
-      await checkUser()
+      if (error) throw error
       
       toast.success('Вы успешно вошли в систему!')
       setIsAuthModalOpen(false)
       return { data, error: null }
     } catch (error) {
-      console.error('Error signing in:', error)
-      toast.error(error.message || 'Ошибка входа')
+      console.error('AuthContext: Error signing in:', error)
       return { data: null, error }
-    } finally {
-      setLoading(false)
     }
   }
 
   // Выход
   const signOut = async () => {
     try {
-      setLoading(true)
-      
       const { error } = await supabase.auth.signOut()
       if (error) throw error
 
-      setUser(null)
-      setProfile(null)
       toast.success('Вы вышли из системы')
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('AuthContext: Error signing out:', error)
       toast.error('Ошибка выхода')
-    } finally {
-      setLoading(false)
     }
   }
 
   // Сброс пароля
   const resetPassword = async (email) => {
     try {
-      setLoading(true)
-      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       })
@@ -194,11 +199,9 @@ export const AuthProvider = ({ children }) => {
       toast.success('Инструкции по сбросу пароля отправлены на email')
       return { error: null }
     } catch (error) {
-      console.error('Error resetting password:', error)
+      console.error('AuthContext: Error resetting password:', error)
       toast.error(error.message || 'Ошибка сброса пароля')
       return { error }
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -220,7 +223,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Профиль обновлен')
       return { data, error: null }
     } catch (error) {
-      console.error('Error updating profile:', error)
+      console.error('AuthContext: Error updating profile:', error)
       toast.error('Ошибка обновления профиля')
       return { data: null, error }
     }
@@ -236,7 +239,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Email обновлен. Проверьте почту для подтверждения.')
       return { error: null }
     } catch (error) {
-      console.error('Error updating email:', error)
+      console.error('AuthContext: Error updating email:', error)
       toast.error('Ошибка обновления email')
       return { error }
     }
@@ -252,7 +255,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Пароль успешно изменен')
       return { error: null }
     } catch (error) {
-      console.error('Error updating password:', error)
+      console.error('AuthContext: Error updating password:', error)
       toast.error('Ошибка изменения пароля')
       return { error }
     }
@@ -270,8 +273,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updateProfile,
     updateEmail,
-    updatePassword,
-    checkUser
+    updatePassword
   }
 
   return (

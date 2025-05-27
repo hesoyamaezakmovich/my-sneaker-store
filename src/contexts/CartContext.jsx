@@ -9,29 +9,33 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
 
-  // Загружаем корзину при входе пользователя
+  // Загружаем корзину только когда пользователь точно определен
   useEffect(() => {
+    if (authLoading) return // Ждем завершения проверки авторизации
+    
     if (user) {
       loadCart()
     } else {
-      // Если пользователь вышел, загружаем корзину из localStorage
       loadLocalCart()
     }
-  }, [user])
+  }, [user, authLoading])
 
   // Сохраняем корзину в localStorage для неавторизованных пользователей
   useEffect(() => {
-    if (!user && cartItems.length > 0) {
+    if (!authLoading && !user && cartItems.length > 0) {
       localStorage.setItem('cart', JSON.stringify(cartItems))
     }
-  }, [cartItems, user])
+  }, [cartItems, user, authLoading])
 
   // Загрузка корзины из базы данных
   const loadCart = async () => {
+    if (!user) return
+    
     try {
       setLoading(true)
+      console.log('CartContext: Loading cart for user:', user.id)
       
       const { data, error } = await supabase
         .from('cart_items')
@@ -45,16 +49,28 @@ export const CartProvider = ({ children }) => {
       if (error) throw error
 
       setCartItems(data || [])
+      console.log('CartContext: Cart loaded, items count:', data?.length || 0)
       
-      // Синхронизируем с локальной корзиной
+      // Синхронизируем с локальной корзиной только один раз
       const localCart = JSON.parse(localStorage.getItem('cart') || '[]')
       if (localCart.length > 0) {
+        console.log('CartContext: Syncing local cart:', localCart.length, 'items')
         await syncLocalCart(localCart)
         localStorage.removeItem('cart')
+        // Перезагружаем корзину после синхронизации
+        const { data: updatedData } = await supabase
+          .from('cart_items')
+          .select(`
+            *,
+            product:products(*, brand:brands(*), category:categories(*), images:product_images(*)),
+            size:sizes(*)
+          `)
+          .eq('user_id', user.id)
+        setCartItems(updatedData || [])
       }
     } catch (error) {
-      console.error('Error loading cart:', error)
-      toast.error('Ошибка загрузки корзины')
+      console.error('CartContext: Error loading cart:', error)
+      // Не показываем toast при каждой ошибке
     } finally {
       setLoading(false)
     }
@@ -62,36 +78,72 @@ export const CartProvider = ({ children }) => {
 
   // Загрузка корзины из localStorage
   const loadLocalCart = () => {
-    const localCart = JSON.parse(localStorage.getItem('cart') || '[]')
-    setCartItems(localCart)
+    try {
+      const localCart = JSON.parse(localStorage.getItem('cart') || '[]')
+      setCartItems(localCart)
+      console.log('CartContext: Local cart loaded, items count:', localCart.length)
+    } catch (error) {
+      console.error('CartContext: Error loading local cart:', error)
+      setCartItems([])
+    }
   }
 
   // Синхронизация локальной корзины с базой данных
   const syncLocalCart = async (localCart) => {
+    if (!user || !localCart.length) return
+    
     try {
+      console.log('CartContext: Syncing local cart with database')
+      
       for (const item of localCart) {
-        await addToCart(item.product_id, item.size_id, item.quantity)
+        // Проверяем, есть ли уже такой товар в корзине
+        const { data: existing } = await supabase
+          .from('cart_items')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('product_id', item.product_id)
+          .eq('size_id', item.size_id)
+          .single()
+
+        if (existing) {
+          // Обновляем количество
+          await supabase
+            .from('cart_items')
+            .update({ quantity: existing.quantity + item.quantity })
+            .eq('id', existing.id)
+        } else {
+          // Добавляем новый товар
+          await supabase
+            .from('cart_items')
+            .insert({
+              user_id: user.id,
+              product_id: item.product_id,
+              size_id: item.size_id,
+              quantity: item.quantity
+            })
+        }
       }
+      
+      console.log('CartContext: Local cart synced successfully')
     } catch (error) {
-      console.error('Error syncing cart:', error)
+      console.error('CartContext: Error syncing cart:', error)
     }
   }
 
   // Добавление товара в корзину
   const addToCart = async (productId, sizeId, quantity = 1) => {
     try {
+      console.log('CartContext: Adding to cart:', { productId, sizeId, quantity })
+      
       if (user) {
         // Для авторизованных пользователей
-        // Проверяем, есть ли уже такой товар в корзине
         const existingItem = cartItems.find(
           item => item.product_id === productId && item.size_id === sizeId
         )
 
         if (existingItem) {
-          // Обновляем количество
           await updateQuantity(existingItem.id, existingItem.quantity + quantity)
         } else {
-          // Добавляем новый товар
           const { data, error } = await supabase
             .from('cart_items')
             .insert({
@@ -109,11 +161,10 @@ export const CartProvider = ({ children }) => {
 
           if (error) throw error
           
-          setCartItems([...cartItems, data])
+          setCartItems(prev => [...prev, data])
         }
       } else {
         // Для неавторизованных пользователей
-        // Получаем информацию о товаре
         const { data: product } = await supabase
           .from('products')
           .select('*, brand:brands(*), category:categories(*), images:product_images(*)')
@@ -126,16 +177,13 @@ export const CartProvider = ({ children }) => {
           .eq('id', sizeId)
           .single()
 
-        const existingItem = cartItems.find(
+        const existingItemIndex = cartItems.findIndex(
           item => item.product_id === productId && item.size_id === sizeId
         )
 
-        if (existingItem) {
-          const updatedItems = cartItems.map(item =>
-            item.product_id === productId && item.size_id === sizeId
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
-          )
+        if (existingItemIndex !== -1) {
+          const updatedItems = [...cartItems]
+          updatedItems[existingItemIndex].quantity += quantity
           setCartItems(updatedItems)
         } else {
           const newItem = {
@@ -146,14 +194,14 @@ export const CartProvider = ({ children }) => {
             product,
             size
           }
-          setCartItems([...cartItems, newItem])
+          setCartItems(prev => [...prev, newItem])
         }
       }
 
       toast.success('Товар добавлен в корзину')
       setIsCartOpen(true)
     } catch (error) {
-      console.error('Error adding to cart:', error)
+      console.error('CartContext: Error adding to cart:', error)
       toast.error('Ошибка добавления в корзину')
     }
   }
@@ -176,12 +224,11 @@ export const CartProvider = ({ children }) => {
         if (error) throw error
       }
 
-      const updatedItems = cartItems.map(item =>
+      setCartItems(prev => prev.map(item =>
         item.id === itemId ? { ...item, quantity } : item
-      )
-      setCartItems(updatedItems)
+      ))
     } catch (error) {
-      console.error('Error updating quantity:', error)
+      console.error('CartContext: Error updating quantity:', error)
       toast.error('Ошибка обновления количества')
     }
   }
@@ -199,11 +246,10 @@ export const CartProvider = ({ children }) => {
         if (error) throw error
       }
 
-      const updatedItems = cartItems.filter(item => item.id !== itemId)
-      setCartItems(updatedItems)
+      setCartItems(prev => prev.filter(item => item.id !== itemId))
       toast.success('Товар удален из корзины')
     } catch (error) {
-      console.error('Error removing from cart:', error)
+      console.error('CartContext: Error removing from cart:', error)
       toast.error('Ошибка удаления из корзины')
     }
   }
@@ -224,7 +270,7 @@ export const CartProvider = ({ children }) => {
       localStorage.removeItem('cart')
       toast.success('Корзина очищена')
     } catch (error) {
-      console.error('Error clearing cart:', error)
+      console.error('CartContext: Error clearing cart:', error)
       toast.error('Ошибка очистки корзины')
     }
   }
@@ -270,8 +316,6 @@ export const CartProvider = ({ children }) => {
     getCartItem,
     loadCart
   }
-
-  console.log('CartContext state:', { isCartOpen, cartItems: cartItems.length })
 
   return (
     <CartContext.Provider value={value}>
