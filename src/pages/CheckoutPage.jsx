@@ -12,13 +12,11 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
     phone: '',
     email: '',
-    address: '',
-    city: '',
-    postalCode: '',
+    shipping_address: '',
+    shipping_city: '',
+    shipping_postal_code: '',
     notes: '',
   })
 
@@ -51,7 +49,12 @@ export default function CheckoutPage() {
         order_number: generateOrderNumber(),
         total_amount: cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0),
         status: 'pending',
-        ...form
+        phone: form.phone,
+        email: form.email,
+        shipping_address: form.shipping_address,
+        shipping_city: form.shipping_city,
+        shipping_postal_code: form.shipping_postal_code,
+        notes: form.notes,
       }
       await createOrder(order, cartItems)
       await clearCart(user.id)
@@ -78,13 +81,11 @@ export default function CheckoutPage() {
       <h1 className="text-2xl font-bold mb-6">Оформление заказа</h1>
       <form className="bg-white rounded-xl shadow p-6 mb-8" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input name="firstName" value={form.firstName} onChange={handleChange} required placeholder="Имя" className="input" />
-          <input name="lastName" value={form.lastName} onChange={handleChange} required placeholder="Фамилия" className="input" />
           <input name="phone" value={form.phone} onChange={handleChange} required placeholder="Телефон" className="input" />
           <input name="email" value={form.email} onChange={handleChange} required placeholder="Email" className="input" />
-          <input name="address" value={form.address} onChange={handleChange} required placeholder="Адрес" className="input col-span-2" />
-          <input name="city" value={form.city} onChange={handleChange} required placeholder="Город" className="input" />
-          <input name="postalCode" value={form.postalCode} onChange={handleChange} required placeholder="Индекс" className="input" />
+          <input name="shipping_address" value={form.shipping_address} onChange={handleChange} required placeholder="Адрес" className="input col-span-2" />
+          <input name="shipping_city" value={form.shipping_city} onChange={handleChange} required placeholder="Город" className="input" />
+          <input name="shipping_postal_code" value={form.shipping_postal_code} onChange={handleChange} required placeholder="Индекс" className="input" />
         </div>
         <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Комментарий к заказу" className="input w-full mb-4" rows={2} />
         {error && <div className="text-red-500 mb-4">{error}</div>}
