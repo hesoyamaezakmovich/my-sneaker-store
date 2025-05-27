@@ -1,0 +1,57 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import ProductDetails from '../components/product/ProductDetails'
+import { fetchProductById } from '../services/products.service'
+import Button from '../components/ui/Button'
+import toast from 'react-hot-toast'
+
+const ProductPage = () => {
+  const { id } = useParams()
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchProductById(id)
+      .then(setProduct)
+      .finally(() => setLoading(false))
+  }, [id])
+
+  const handleAddToCart = (product, sizeId) => {
+    toast(`Добавить в корзину: ${product.name}, размер: ${product.sizes.find(s => s.id === sizeId)?.size?.size_value}`)
+  }
+
+  if (loading) {
+    return <div className="max-w-5xl mx-auto px-4 py-8">Загрузка...</div>
+  }
+  if (!product) {
+    return <div className="max-w-5xl mx-auto px-4 py-8">Товар не найден</div>
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <ProductDetails product={product} onAddToCart={handleAddToCart} />
+
+      {/* Similar products (заглушка) */}
+      <section className="mt-16">
+        <h2 className="text-2xl font-bold mb-4 text-gray-900">Похожие товары</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {[1,2,3,4].map((i) => (
+            <div key={i} className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+              <div className="w-24 h-24 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                <span className="text-gray-300 text-4xl">👟</span>
+              </div>
+              <div className="h-4 w-20 bg-gray-200 rounded mb-2 animate-pulse" />
+              <div className="h-4 w-12 bg-gray-100 rounded mb-2 animate-pulse" />
+              <Button size="small" variant="secondary" className="mt-2 w-full">
+                Подробнее
+              </Button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+export default ProductPage
