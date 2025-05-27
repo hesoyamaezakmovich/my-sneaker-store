@@ -4,6 +4,7 @@ import { createOrder } from '../services/orders.service'
 import CartItem from '../components/cart/CartItem'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
+import { generateOrderNumber } from '../utils/helpers'
 
 export default function CheckoutPage() {
   const { user, loading: authLoading } = useAuth()
@@ -45,7 +46,14 @@ export default function CheckoutPage() {
     if (!user) return
     setError(null)
     try {
-      await createOrder(user.id, form, cartItems)
+      const order = {
+        user_id: user.id,
+        order_number: generateOrderNumber(),
+        total_amount: cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0),
+        status: 'pending',
+        ...form
+      }
+      await createOrder(order, cartItems)
       await clearCart(user.id)
       setCartItems([])
       toast.success('Заказ успешно оформлен!')
