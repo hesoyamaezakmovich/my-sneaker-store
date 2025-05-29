@@ -3,26 +3,43 @@ import { createClient } from '@supabase/supabase-js'
 // Получаем переменные окружения
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development'
 
 // Проверяем наличие переменных
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Отсутствуют переменные окружения Supabase. Проверьте файл .env')
 }
 
-// Создаем клиент Supabase
+// Создаем клиент Supabase с улучшенной конфигурацией
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    // Для Vercel важно правильно настроить URL
-    flowType: 'pkce'
+    storage: window.localStorage,
+    storageKey: 'bro-shop-auth-token',
+    // Убираем flowType: 'pkce' если не используем OAuth
   },
-  // Для продакшена на Vercel
   global: {
     headers: {
       'x-application-name': 'bro-shop'
+    },
+    // Добавляем таймаут для всех запросов
+    fetch: (url, options = {}) => {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 секунд
+      
+      return fetch(url, {
+        ...options,
+        signal: controller.signal
+      }).finally(() => {
+        clearTimeout(timeoutId)
+      })
+    }
+  },
+  // Добавляем настройки для реалтайма (если используется)
+  realtime: {
+    params: {
+      eventsPerSecond: 2
     }
   }
 })
@@ -33,22 +50,57 @@ export const handleSupabaseError = (error) => {
     console.error('Supabase error:', error)
     
     // Обработка специфических ошибок
-    if (error.message.includes('JWT')) {
+    if (error.message?.includes('JWT') || error.message?.includes('token')) {
       return 'Сессия истекла. Пожалуйста, войдите снова.'
     }
     
-    if (error.message.includes('duplicate key')) {
+    if (error.message?.includes('duplicate key')) {
       return 'Такая запись уже существует.'
     }
     
-    if (error.message.includes('violates foreign key')) {
+    if (error.message?.includes('violates foreign key')) {
       return 'Ошибка связи данных.'
+    }
+    
+    if (error.message?.includes('Failed to fetch')) {
+      return 'Ошибка соединения. Проверьте интернет-подключение.'
+    }
+    
+    if (error.message?.includes('timeout')) {
+      return 'Превышено время ожидания. Попробуйте еще раз.'
     }
     
     return error.message || 'Произошла неизвестная ошибка'
   }
   
   return null
+}
+
+// Функция для безопасного выполнения запросов с повторными попытками
+export const safeSupabaseCall = async (fn, retries = 3) => {
+  let lastError = null
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error
+      
+      // Не повторяем при ошибках аутентификации
+      if (error.message?.includes('JWT') || 
+          error.message?.includes('token') ||
+          error.status === 401) {
+        throw error
+      }
+      
+      // Ждем перед повторной попыткой (экспоненциальная задержка)
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000))
+      }
+    }
+  }
+  
+  throw lastError
 }
 
 // Хелпер для загрузки изображений
@@ -89,14 +141,33 @@ export const getImageUrl = (path, bucket = 'products') => {
   return data.publicUrl
 }
 
-const checkUser = async () => {
+// Функция для проверки состояния соединения
+export const checkSupabaseConnection = async () => {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    console.log('checkUser: user =', user)
-    // ... остальной код
-  } catch (error) {
-    console.error('Error checking user:', error)
-  } finally {
-    setLoading(false)
+    const { error } = await supabase.from('profiles').select('count').limit(1)
+    return !error
+  } catch {
+    return false
   }
+}
+
+// Экспортируем функцию для мониторинга состояния auth
+export const monitorAuthState = () => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    console.log(`[Supabase Auth] Event: ${event}, Session: ${!!session}`)
+    
+    if (event === 'TOKEN_REFRESHED') {
+      console.log('[Supabase Auth] Token refreshed at:', new Date().toISOString())
+    }
+    
+    if (event === 'SIGNED_OUT') {
+      console.log('[Supabase Auth] User signed out at:', new Date().toISOString())
+    }
+    
+    if (event === 'USER_UPDATED') {
+      console.log('[Supabase Auth] User updated at:', new Date().toISOString())
+    }
+  })
+  
+  return subscription
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../services/supabase'
 import toast from 'react-hot-toast'
 
@@ -9,9 +9,18 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  
+  // Флаги для предотвращения множественных вызовов
+  const hasHandledExpiredSession = useRef(false)
+  const isLoadingProfile = useRef(false)
 
   // Мемоизированная функция загрузки профиля
   const loadProfile = useCallback(async (userId, email) => {
+    // Предотвращаем множественные одновременные вызовы
+    if (isLoadingProfile.current) return
+    
+    isLoadingProfile.current = true
+    
     try {
       console.log('AuthContext: Loading profile for user:', userId)
       
@@ -54,7 +63,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('AuthContext: Error loading profile:', error)
       // Не показываем toast при каждой ошибке загрузки профиля
-      // toast.error('Ошибка загрузки профиля')
+    } finally {
+      isLoadingProfile.current = false
     }
   }, [])
 
@@ -65,24 +75,48 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         console.log('AuthContext: Initializing auth...')
+        
+        // Проверяем, не обработали ли мы уже истекшую сессию
+        if (hasHandledExpiredSession.current) {
+          console.log('AuthContext: Expired session already handled, skipping init')
+          if (isMounted) {
+            setLoading(false)
+          }
+          return
+        }
+        
         // Получаем текущую сессию
         const { data: { session }, error } = await supabase.auth.getSession()
 
         if (error) {
           console.error('AuthContext: Error getting session:', error)
-          // --- PATCH: обработка битой сессии ---
-          if (
+          
+          // Обработка битой сессии - только один раз!
+          if (!hasHandledExpiredSession.current && (
             error.message?.includes('JWT') ||
             error.message?.includes('token') ||
             error.status === 401
-          ) {
-            await supabase.auth.signOut()
+          )) {
+            hasHandledExpiredSession.current = true
+            
+            try {
+              await supabase.auth.signOut()
+            } catch (signOutError) {
+              console.error('AuthContext: Error signing out:', signOutError)
+            }
+            
             // Удаляем только ключи Supabase из localStorage
             Object.keys(localStorage)
               .filter(key => key.startsWith('sb-'))
               .forEach(key => localStorage.removeItem(key))
-            toast.error('Ваша сессия истекла. Пожалуйста, войдите снова.')
+            
+            if (isMounted) {
+              setUser(null)
+              setProfile(null)
+              toast.error('Ваша сессия истекла. Пожалуйста, войдите снова.')
+            }
           }
+          
           if (isMounted) {
             setUser(null)
             setProfile(null)
@@ -102,15 +136,26 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('AuthContext: Error initializing auth:', error)
-        // --- PATCH: обработка битой сессии ---
-        await supabase.auth.signOut()
-        Object.keys(localStorage)
-          .filter(key => key.startsWith('sb-'))
-          .forEach(key => localStorage.removeItem(key))
-        toast.error('Ваша сессия истекла. Пожалуйста, войдите снова.')
-        if (isMounted) {
-          setUser(null)
-          setProfile(null)
+        
+        // Обработка критической ошибки - также только один раз
+        if (!hasHandledExpiredSession.current) {
+          hasHandledExpiredSession.current = true
+          
+          try {
+            await supabase.auth.signOut()
+          } catch (signOutError) {
+            console.error('AuthContext: Error signing out:', signOutError)
+          }
+          
+          Object.keys(localStorage)
+            .filter(key => key.startsWith('sb-'))
+            .forEach(key => localStorage.removeItem(key))
+          
+          if (isMounted) {
+            setUser(null)
+            setProfile(null)
+            toast.error('Произошла ошибка авторизации. Пожалуйста, войдите снова.')
+          }
         }
       } finally {
         if (isMounted) {
@@ -124,7 +169,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       isMounted = false
     }
-  }, [loadProfile])
+  }, []) // Убираем loadProfile из зависимостей!
 
   // Подписка на изменения состояния аутентификации
   useEffect(() => {
@@ -134,14 +179,17 @@ export const AuthProvider = ({ children }) => {
       async (event, session) => {
         console.log('AuthContext: Auth state changed:', event, !!session?.user)
         
+        // Сбрасываем флаг при успешном входе
         if (event === 'SIGNED_IN' && session?.user) {
+          hasHandledExpiredSession.current = false
           setUser(session.user)
           await loadProfile(session.user.id, session.user.email)
         } else if (event === 'SIGNED_OUT') {
           setUser(null)
           setProfile(null)
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('AuthContext: Token refreshed successfully')
         }
-        // Не меняем loading здесь, так как он уже управляется в initializeAuth
       }
     )
 
@@ -183,6 +231,9 @@ export const AuthProvider = ({ children }) => {
       
       if (error) throw error
       
+      // Сбрасываем флаг при успешном входе
+      hasHandledExpiredSession.current = false
+      
       toast.success('Вы успешно вошли в систему!')
       setIsAuthModalOpen(false)
       return { data, error: null }
@@ -198,6 +249,9 @@ export const AuthProvider = ({ children }) => {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
 
+      // Сбрасываем флаг при выходе
+      hasHandledExpiredSession.current = false
+      
       toast.success('Вы вышли из системы')
     } catch (error) {
       console.error('AuthContext: Error signing out:', error)

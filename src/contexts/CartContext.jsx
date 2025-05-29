@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react'
+import React, { createContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '../services/supabase'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
@@ -10,31 +10,67 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { user, loading: authLoading } = useAuth()
+  
+  // Флаги для предотвращения множественных загрузок
+  const hasLoadedCart = useRef(false)
+  const lastUserId = useRef(null)
 
   // Загружаем корзину только когда пользователь точно определен
   useEffect(() => {
-    if (authLoading) return // Ждем завершения проверки авторизации
+    // Ждем завершения проверки авторизации
+    if (authLoading) {
+      console.log('CartContext: Waiting for auth to load')
+      return
+    }
+    
+    // Если пользователь не изменился, не перезагружаем
+    if (user?.id === lastUserId.current) {
+      console.log('CartContext: User unchanged, skipping reload')
+      return
+    }
+    
+    // Обновляем последнего пользователя
+    lastUserId.current = user?.id || null
+    
+    // Сбрасываем флаг при смене пользователя
+    hasLoadedCart.current = false
     
     if (user) {
       loadCart()
     } else {
-      loadLocalCart()
+      // Загружаем локальную корзину только если еще не загружали
+      if (!hasLoadedCart.current) {
+        loadLocalCart()
+        hasLoadedCart.current = true
+      }
     }
-  }, [user, authLoading])
+  }, [user?.id, authLoading])
 
   // Сохраняем корзину в localStorage для неавторизованных пользователей
   useEffect(() => {
     if (!authLoading && !user && cartItems.length > 0) {
-      localStorage.setItem('cart', JSON.stringify(cartItems))
+      try {
+        localStorage.setItem('cart', JSON.stringify(cartItems))
+      } catch (error) {
+        console.error('CartContext: Error saving to localStorage:', error)
+      }
     }
   }, [cartItems, user, authLoading])
 
   // Загрузка корзины из базы данных
   const loadCart = async () => {
-    if (!user) return
+    if (!user || hasLoadedCart.current || loading) {
+      console.log('CartContext: Skipping cart load', { 
+        hasUser: !!user, 
+        hasLoaded: hasLoadedCart.current, 
+        isLoading: loading 
+      })
+      return
+    }
     
     try {
       setLoading(true)
+      hasLoadedCart.current = true
       console.log('CartContext: Loading cart for user:', user.id)
       
       const { data, error } = await supabase
@@ -46,33 +82,53 @@ export const CartProvider = ({ children }) => {
         `)
         .eq('user_id', user.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('CartContext: Error loading cart:', error)
+        hasLoadedCart.current = false // Сбрасываем флаг при ошибке
+        throw error
+      }
 
       setCartItems(data || [])
       console.log('CartContext: Cart loaded, items count:', data?.length || 0)
       
       // Синхронизируем с локальной корзиной только один раз
-      const localCart = JSON.parse(localStorage.getItem('cart') || '[]')
-      if (localCart.length > 0) {
-        console.log('CartContext: Syncing local cart:', localCart.length, 'items')
-        await syncLocalCart(localCart)
-        localStorage.removeItem('cart')
-        // Перезагружаем корзину после синхронизации
-        const { data: updatedData } = await supabase
-          .from('cart_items')
-          .select(`
-            *,
-            product:products(*, brand:brands(*), category:categories(*), images:product_images(*)),
-            size:sizes(*)
-          `)
-          .eq('user_id', user.id)
-        setCartItems(updatedData || [])
-      }
+      await syncLocalCartOnce()
     } catch (error) {
       console.error('CartContext: Error loading cart:', error)
       // Не показываем toast при каждой ошибке
+      if (error.message?.includes('JWT') || error.message?.includes('token')) {
+        // Не обрабатываем ошибки JWT здесь, это делает AuthContext
+        return
+      }
+      toast.error('Ошибка загрузки корзины')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Одноразовая синхронизация локальной корзины
+  const syncLocalCartOnce = async () => {
+    try {
+      const localCart = JSON.parse(localStorage.getItem('cart') || '[]')
+      if (localCart.length === 0) return
+      
+      console.log('CartContext: Syncing local cart:', localCart.length, 'items')
+      await syncLocalCart(localCart)
+      localStorage.removeItem('cart')
+      
+      // Перезагружаем корзину после синхронизации
+      const { data: updatedData } = await supabase
+        .from('cart_items')
+        .select(`
+          *,
+          product:products(*, brand:brands(*), category:categories(*), images:product_images(*)),
+          size:sizes(*)
+        `)
+        .eq('user_id', user.id)
+      
+      setCartItems(updatedData || [])
+    } catch (error) {
+      console.error('CartContext: Error syncing local cart:', error)
     }
   }
 
@@ -268,6 +324,7 @@ export const CartProvider = ({ children }) => {
 
       setCartItems([])
       localStorage.removeItem('cart')
+      hasLoadedCart.current = false
       toast.success('Корзина очищена')
     } catch (error) {
       console.error('CartContext: Error clearing cart:', error)

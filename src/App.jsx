@@ -10,6 +10,7 @@ import { CartProvider } from './contexts/CartContext'
 import { FavoritesProvider } from './contexts/FavoritesContext'
 import ErrorBoundary from './components/common/ErrorBoundary'
 
+
 // Настройка React Query
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,6 +21,7 @@ const queryClient = new QueryClient({
     },
   },
 })
+
 
 function App() {
   return (
