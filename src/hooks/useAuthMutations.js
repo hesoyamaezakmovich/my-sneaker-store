@@ -4,28 +4,26 @@ import toast from 'react-hot-toast'
 
 export const useSignIn = () => {
   const queryClient = useQueryClient()
-  return useMutation(
-    async ({ email, password }) => {
+  return useMutation({
+    mutationFn: async ({ email, password }) => {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       return data
     },
-    {
-      onSuccess: () => {
-        toast.success('Вы успешно вошли!')
-        queryClient.invalidateQueries(['user'])
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Ошибка входа')
-      }
+    onSuccess: () => {
+      toast.success('Вы успешно вошли!')
+      queryClient.invalidateQueries({ queryKey: ['user'] })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Ошибка входа')
     }
-  )
+  })
 }
 
 export const useSignUp = () => {
   const queryClient = useQueryClient()
-  return useMutation(
-    async ({ email, password, additionalData }) => {
+  return useMutation({
+    mutationFn: async ({ email, password, additionalData }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -34,22 +32,20 @@ export const useSignUp = () => {
       if (error) throw error
       return data
     },
-    {
-      onSuccess: () => {
-        toast.success('Регистрация успешна! Проверьте email.')
-        queryClient.invalidateQueries(['user'])
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Ошибка регистрации')
-      }
+    onSuccess: () => {
+      toast.success('Регистрация успешна! Проверьте email.')
+      queryClient.invalidateQueries({ queryKey: ['user'] })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Ошибка регистрации')
     }
-  )
+  })
 }
 
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient()
-  return useMutation(
-    async ({ userId, updates }) => {
+  return useMutation({
+    mutationFn: async ({ userId, updates }) => {
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -59,14 +55,12 @@ export const useUpdateProfile = () => {
       if (error) throw error
       return data
     },
-    {
-      onSuccess: (_, { userId }) => {
-        toast.success('Профиль обновлен')
-        queryClient.invalidateQueries(['profile', userId])
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Ошибка обновления профиля')
-      }
+    onSuccess: (_, { userId }) => {
+      toast.success('Профиль обновлен')
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] })
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Ошибка обновления профиля')
     }
-  )
-} 
+  })
+}

@@ -8,13 +8,17 @@ import Router from './Router'
 import { AuthProvider } from './contexts/AuthContext'
 import ErrorBoundary from './components/common/ErrorBoundary'
 
-// Настройка React Query
+// Исправленная настройка React Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
       staleTime: 5 * 60 * 1000, // 5 минут
+      cacheTime: 10 * 60 * 1000, // 10 минут
+    },
+    mutations: {
+      retry: 1,
     },
   },
 })
