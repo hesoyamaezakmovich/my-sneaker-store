@@ -14,6 +14,16 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const CareersPage = lazy(() => import('./pages/CareersPage'))
+const NewsPage = lazy(() => import('./pages/NewsPage'))
+const ContactsPage = lazy(() => import('./pages/ContactsPage'))
+const HowToOrderPage = lazy(() => import('./pages/HowToOrderPage'))
+const DeliveryPage = lazy(() => import('./pages/DeliveryPage'))
+const ReturnsPage = lazy(() => import('./pages/ReturnsPage'))
+const SizeGuidePage = lazy(() => import('./pages/SizeGuidePage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const TermsPage = lazy(() => import('./pages/TermsPage'))
 
 function Router() {
   return (
@@ -36,6 +46,16 @@ function Router() {
           
           {/* 404 страница */}
           <Route path="404" element={<NotFoundPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="careers" element={<CareersPage />} />
+          <Route path="news" element={<NewsPage />} />
+          <Route path="contacts" element={<ContactsPage />} />
+          <Route path="how-to-order" element={<HowToOrderPage />} />
+          <Route path="delivery" element={<DeliveryPage />} />
+          <Route path="returns" element={<ReturnsPage />} />
+          <Route path="size-guide" element={<SizeGuidePage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="terms" element={<TermsPage />} />
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Route>
       </Routes>
