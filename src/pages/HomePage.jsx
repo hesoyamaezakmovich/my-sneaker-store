@@ -1,6 +1,11 @@
 import React from 'react'
 import Button from '../components/ui/Button'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { fetchProducts } from '../services/products.service'
+import ProductList from '../components/product/ProductList'
+import { useUserQuery } from '../hooks/useUserQuery'
+import { useFavoritesQuery } from '../hooks/useFavoritesQuery'
 
 const BRANDS = [
   { name: 'Nike', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg' },
@@ -14,6 +19,17 @@ const BRANDS = [
 ]
 
 const HomePage = () => {
+  const { data: user } = useUserQuery()
+  const { data: favorites = [] } = useFavoritesQuery(user?.id)
+  const { data: products = [], isLoading } = useQuery(['products'], fetchProducts)
+
+  // Фильтруем только товары с доступными размерами
+  const availableProducts = products.filter(
+    (product) => Array.isArray(product.sizes) && product.sizes.some((s) => s.quantity > 0)
+  )
+  // Можно сортировать по популярности, если есть поле, или просто брать первые 4
+  const popularProducts = availableProducts.slice(0, 4)
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Hero Section */}
@@ -57,23 +73,29 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Popular Products (stub) */}
+      {/* Popular Products */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-4 text-gray-900">Популярные товары</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {[1,2,3,4].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-              <div className="w-32 h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                <span className="text-gray-300 text-5xl">👟</span>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {[1,2,3,4].map((i) => (
+              <div key={i} className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+                <div className="w-32 h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                  <span className="text-gray-300 text-5xl">👟</span>
+                </div>
+                <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse" />
+                <div className="h-4 w-16 bg-gray-100 rounded mb-2 animate-pulse" />
+                <Button as={Link} to="/catalog" size="small" variant="secondary">
+                  Смотреть
+                </Button>
               </div>
-              <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse" />
-              <div className="h-4 w-16 bg-gray-100 rounded mb-2 animate-pulse" />
-              <Button as={Link} to="/catalog" size="small" variant="secondary">
-                Смотреть
-              </Button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : popularProducts.length === 0 ? (
+          <div className="text-gray-500">Нет товаров в наличии</div>
+        ) : (
+          <ProductList products={popularProducts} favorites={favorites} />
+        )}
       </section>
 
       {/* Call to action */}
