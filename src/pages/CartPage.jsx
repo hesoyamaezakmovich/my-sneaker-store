@@ -4,11 +4,11 @@ import CartSummary from '../components/cart/CartSummary'
 import { fetchCart, updateCartItem, removeFromCart } from '../services/cart.service'
 import { ShoppingCart } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useUserQuery } from '../hooks/useUserQuery'
 import toast from 'react-hot-toast'
 
 export default function CartPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { data: user, isLoading: authLoading } = useUserQuery()
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { fetchOrdersByUser } from '../services/orders.service'
 import { Package } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useUserQuery } from '../hooks/useUserQuery'
 import toast from 'react-hot-toast'
 
 export default function OrdersPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { data: user, isLoading: authLoading } = useUserQuery()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

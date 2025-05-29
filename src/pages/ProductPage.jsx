@@ -5,10 +5,12 @@ import { fetchProductById } from '../services/products.service'
 import { useAuth } from '../hooks/useAuth'
 import { useCart } from '../hooks/useCart'
 import Button from '../components/ui/Button'
+import { useUserQuery } from '../hooks/useUserQuery'
 
 const ProductPage = () => {
   const { id } = useParams()
-  const { user, setIsAuthModalOpen } = useAuth()
+  const { setIsAuthModalOpen } = useAuth()
+  const { data: user } = useUserQuery()
   const { addToCart } = useCart()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)

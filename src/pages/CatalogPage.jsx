@@ -5,7 +5,10 @@ import ProductList from '../components/product/ProductList'
 import { fetchProducts } from '../services/products.service'
 import { useAuth } from '../hooks/useAuth'
 import { useCart } from '../hooks/useCart'
-import { useFavorites } from '../hooks/useFavorites'
+import { useUserQuery } from '../hooks/useUserQuery'
+import { useFavoritesQuery } from '../hooks/useFavoritesQuery'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { addToFavorites, removeFromFavorites } from '../services/favorites.service'
 import toast from 'react-hot-toast'
 
 const BRANDS = [
@@ -39,10 +42,12 @@ const SORTS = [
 ]
 
 const CatalogPage = () => {
-  const { user, setIsAuthModalOpen } = useAuth()
+  const { setIsAuthModalOpen } = useAuth()
   const { addToCart } = useCart()
-  const { favorites, addFavorite, removeFavorite } = useFavorites()
-  
+  const { data: user } = useUserQuery()
+  const { data: favorites = [] } = useFavoritesQuery(user?.id)
+  const queryClient = useQueryClient()
+
   // Фильтры
   const [filters, setFilters] = useState({
     brand: '',
@@ -78,62 +83,73 @@ const CatalogPage = () => {
       setIsAuthModalOpen(true)
       return
     }
-    
     try {
       await addToCart(product.id, sizeId, 1)
     } catch (error) {
       console.error('Error adding to cart:', error)
     }
   }
-  
+
+  // Мутации для избранного
+  const addFavoriteMutation = useMutation(
+    (productId) => addToFavorites(user.id, productId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['favorites', user.id])
+        toast.success('Добавлено в избранное')
+      },
+      onError: (e) => {
+        toast.error(e.message || 'Ошибка добавления в избранное')
+      }
+    }
+  )
+  const removeFavoriteMutation = useMutation(
+    (productId) => removeFromFavorites(user.id, productId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['favorites', user.id])
+        toast.success('Удалено из избранного')
+      },
+      onError: (e) => {
+        toast.error(e.message || 'Ошибка удаления из избранного')
+      }
+    }
+  )
+
   // Обработчик избранного
   const handleToggleFavorite = async (product) => {
     if (!user) {
       setIsAuthModalOpen(true)
       return
     }
-    
     const isFavorite = favorites.some(fav => fav.product_id === product.id)
-    
-    try {
-      if (isFavorite) {
-        await removeFavorite(product.id)
-      } else {
-        await addFavorite(product.id)
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error)
+    if (isFavorite) {
+      removeFavoriteMutation.mutate(product.id)
+    } else {
+      addFavoriteMutation.mutate(product.id)
     }
   }
 
   // Фильтрация товаров
   const filteredProducts = products.filter(product => {
-    // Фильтр по бренду
     if (filters.brand && product.brand?.name.toLowerCase() !== filters.brand) {
       return false
     }
-    
-    // Фильтр по категории
     if (filters.category && product.category?.slug !== filters.category) {
       return false
     }
-    
-    // Фильтр по размеру
     if (filters.size) {
       const hasSize = product.sizes?.some(s => 
         s.size?.size_value === filters.size && s.quantity > 0
       )
       if (!hasSize) return false
     }
-    
-    // Фильтр по цене
     if (filters.priceFrom && product.price < Number(filters.priceFrom)) {
       return false
     }
     if (filters.priceTo && product.price > Number(filters.priceTo)) {
       return false
     }
-    
     return true
   })
 
@@ -198,36 +214,14 @@ const CatalogPage = () => {
             <Button 
               variant="secondary" 
               fullWidth 
-              onClick={() => setFilters({ 
-                brand: '', 
-                category: '', 
-                size: '', 
-                priceFrom: '', 
-                priceTo: '', 
-                sort: 'popular' 
-              })}
+              onClick={() => setFilters({ brand: '', category: '', size: '', priceFrom: '', priceTo: '', sort: 'popular' })}
             >
               Сбросить фильтры
             </Button>
           </div>
         </aside>
-
-        {/* Catalog */}
-        <section className="flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-            <div className="text-gray-500 text-sm">
-              Найдено товаров: <span className="font-semibold">{sortedProducts.length}</span>
-            </div>
-            <Select
-              label=""
-              options={SORTS}
-              value={filters.sort}
-              onChange={e => handleChange('sort', e.target.value)}
-              className="w-56"
-            />
-          </div>
-
-          {/* Products grid */}
+        {/* Products grid */}
+        <div className="flex-1">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
@@ -246,14 +240,7 @@ const CatalogPage = () => {
               </p>
               <Button 
                 variant="secondary" 
-                onClick={() => setFilters({ 
-                  brand: '', 
-                  category: '', 
-                  size: '', 
-                  priceFrom: '', 
-                  priceTo: '', 
-                  sort: 'popular' 
-                })}
+                onClick={() => setFilters({ brand: '', category: '', size: '', priceFrom: '', priceTo: '', sort: 'popular' })}
               >
                 Сбросить фильтры
               </Button>
@@ -266,20 +253,7 @@ const CatalogPage = () => {
               favorites={favorites}
             />
           )}
-
-          {/* Pagination (заглушка) */}
-          {sortedProducts.length > 0 && (
-            <div className="flex justify-center mt-10">
-              <Button variant="ghost" disabled>
-                &lt;
-              </Button>
-              <span className="mx-4 text-gray-600">Страница 1 из 1</span>
-              <Button variant="ghost" disabled>
-                &gt;
-              </Button>
-            </div>
-          )}
-        </section>
+        </div>
       </div>
     </div>
   )

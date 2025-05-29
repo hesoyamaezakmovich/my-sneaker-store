@@ -1,11 +1,11 @@
 import React from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../../hooks/useAuth'
+import { useUserQuery } from '../../hooks/useUserQuery'
 import Loader from '../common/Loader'
 
 const ProtectedRoute = () => {
-  const { user, loading } = useAuth()
   const location = useLocation()
+  const { data: user, isLoading: loading } = useUserQuery()
 
   // Показываем загрузчик пока проверяем аутентификацию
   if (loading) {

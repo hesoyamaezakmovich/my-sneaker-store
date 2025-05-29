@@ -2,22 +2,22 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShoppingCart, Heart, User } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
-import { useCart } from '../../hooks/useCart'
-import { useFavorites } from '../../hooks/useFavorites'
+import { useUserQuery } from '../../hooks/useUserQuery'
+import { useFavoritesQuery } from '../../hooks/useFavoritesQuery'
+import { useCartQuery } from '../../hooks/useCartQuery'
 import AuthModal from '../auth/AuthModal'
 import CartDrawer from '../cart/CartDrawer'
 
 const Header = () => {
   const navigate = useNavigate()
-  const { user, setIsAuthModalOpen } = useAuth() || {}
-  const cartContext = useCart()
-  console.log('Header - Cart context:', cartContext)
-  
-  const { cartItems, getTotalItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart } = cartContext || {}
-  const { favorites } = useFavorites() || { favorites: [] }
-  const totalItems = getTotalItems ? getTotalItems() : 0
+  const { isAuthModalOpen, setIsAuthModalOpen } = useAuth() || {}
 
-  console.log('Header - isCartOpen:', isCartOpen)
+  const { data: user } = useUserQuery()
+  const { data: favorites = [] } = useFavoritesQuery(user?.id)
+  const { data: cartItems = [] } = useCartQuery(user?.id)
+  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
+
+  const [isCartOpen, setIsCartOpen] = React.useState(false)
 
   const handleCheckout = () => {
     navigate('/checkout')
@@ -25,11 +25,11 @@ const Header = () => {
   }
 
   const handleChangeQuantity = (item, newQuantity) => {
-    updateQuantity(item.id, newQuantity)
+    // Реализация через useUpdateCartQuantity в компоненте CartDrawer
   }
 
   const handleRemove = (item) => {
-    removeFromCart(item.id)
+    // Реализация через useRemoveFromCart в компоненте CartDrawer
   }
 
   return (
@@ -59,7 +59,6 @@ const Header = () => {
               )}
             </div>
             <div className="relative cursor-pointer group" onClick={() => {
-              console.log('Cart icon clicked, opening drawer...')
               setIsCartOpen(true)
             }}>
               <ShoppingCart className="w-7 h-7 text-gray-700 group-hover:text-black transition" />

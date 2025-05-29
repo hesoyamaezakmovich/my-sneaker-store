@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { fetchCart, clearCart } from '../services/cart.service'
 import { createOrder } from '../services/orders.service'
 import CartItem from '../components/cart/CartItem'
-import { useAuth } from '../hooks/useAuth'
+import { useUserQuery } from '../hooks/useUserQuery'
 import toast from 'react-hot-toast'
 import { generateOrderNumber } from '../utils/helpers'
 
 export default function CheckoutPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { data: user, isLoading: authLoading } = useUserQuery()
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

@@ -2,11 +2,15 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useUserQuery } from '../../hooks/useUserQuery'
+import { useAddToCart } from '../../hooks/useCartMutations'
 
-const ProductCard = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => {
+const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
   const navigate = useNavigate()
   const [selectedSize, setSelectedSize] = useState(null)
   const mainImage = product.images?.find(img => img.is_primary) || product.images?.[0]
+  const { data: user } = useUserQuery()
+  const addToCartMutation = useAddToCart(user?.id)
 
   const handleAddToCart = (e) => {
     e.stopPropagation()
@@ -14,7 +18,11 @@ const ProductCard = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => 
       toast.error('Выберите размер')
       return
     }
-    onAddToCart(product, selectedSize)
+    if (!user) {
+      toast.error('Войдите, чтобы добавить в корзину')
+      return
+    }
+    addToCartMutation.mutate({ productId: product.id, sizeId: selectedSize, quantity: 1 })
   }
 
   const handleCardClick = () => {

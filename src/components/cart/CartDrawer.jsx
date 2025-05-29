@@ -2,10 +2,28 @@ import React from 'react'
 import CartItem from './CartItem'
 import CartSummary from './CartSummary'
 import { ShoppingCart } from 'lucide-react'
+import { useUserQuery } from '../../hooks/useUserQuery'
+import { useCartQuery } from '../../hooks/useCartQuery'
+import { useUpdateCartQuantity, useRemoveFromCart } from '../../hooks/useCartMutations'
 
-const CartDrawer = ({ cartItems = [], onChangeQuantity, onRemove, onCheckout, open, onClose }) => {
-  console.log('CartDrawer render:', { open, itemsCount: cartItems.length })
-  
+const CartDrawer = ({ open, onClose, onCheckout }) => {
+  const { data: user } = useUserQuery()
+  const { data: cartItems = [] } = useCartQuery(user?.id)
+  const updateQuantityMutation = useUpdateCartQuantity(user?.id)
+  const removeFromCartMutation = useRemoveFromCart(user?.id)
+
+  const handleChangeQuantity = (cartItem, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCartMutation.mutate(cartItem.id)
+    } else {
+      updateQuantityMutation.mutate({ itemId: cartItem.id, quantity: newQuantity })
+    }
+  }
+
+  const handleRemove = (cartItem) => {
+    removeFromCartMutation.mutate(cartItem.id)
+  }
+
   return (
     <div className={`fixed inset-0 z-50 transition ${open ? '' : 'pointer-events-none'}`}>
       {/* Overlay */}
@@ -36,8 +54,8 @@ const CartDrawer = ({ cartItems = [], onChangeQuantity, onRemove, onCheckout, op
               <CartItem
                 key={item.id}
                 cartItem={item}
-                onChangeQuantity={onChangeQuantity}
-                onRemove={onRemove}
+                onChangeQuantity={handleChangeQuantity}
+                onRemove={handleRemove}
               />
             ))
           )}
