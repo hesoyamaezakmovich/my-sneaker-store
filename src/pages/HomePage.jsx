@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Button from '../components/ui/Button'
 import { Link } from 'react-router-dom'
+import { fetchProducts } from '../services/products.service'
+import ProductList from '../components/product/ProductList'
 
 const BRANDS = [
   { name: 'Nike', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg' },
@@ -14,6 +16,16 @@ const BRANDS = [
 ]
 
 const HomePage = () => {
+  const [popularProducts, setPopularProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchProducts()
+      .then(products => setPopularProducts(products.slice(0, 4)))
+      .catch(() => setPopularProducts([]))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Hero Section */}
@@ -60,20 +72,26 @@ const HomePage = () => {
       {/* Popular Products (stub) */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-4 text-gray-900">Популярные товары</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {[1,2,3,4].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-              <div className="w-32 h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                <span className="text-gray-300 text-5xl">👟</span>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {[1,2,3,4].map((i) => (
+              <div key={i} className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+                <div className="w-32 h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                  <span className="text-gray-300 text-5xl">👟</span>
+                </div>
+                <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse" />
+                <div className="h-4 w-16 bg-gray-100 rounded mb-2 animate-pulse" />
+                <Button as={Link} to="/catalog" size="small" variant="secondary">
+                  Смотреть
+                </Button>
               </div>
-              <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse" />
-              <div className="h-4 w-16 bg-gray-100 rounded mb-2 animate-pulse" />
-              <Button as={Link} to="/catalog" size="small" variant="secondary">
-                Смотреть
-              </Button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : popularProducts.length > 0 ? (
+          <ProductList products={popularProducts} />
+        ) : (
+          <div className="text-gray-500">Нет товаров для отображения</div>
+        )}
       </section>
 
       {/* Call to action */}
