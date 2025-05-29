@@ -5,7 +5,7 @@ const NewsPage = () => (
     <h1 className="text-3xl font-bold mb-4">Новости</h1>
     <ul className="mb-4 text-gray-700 space-y-4">
       <li>
-        <strong>01.06.2024:</strong> Открытие нового магазина в Санкт-Петербурге!
+        <strong>01.06.2024:</strong> Открытие нового магазина в Архангельске!
       </li>
       <li>
         <strong>15.05.2024:</strong> Поступление новой коллекции Nike Air Max.
