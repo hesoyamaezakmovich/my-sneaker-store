@@ -43,8 +43,8 @@ const SORTS = [
 
 const CatalogPage = () => {
   const { setIsAuthModalOpen } = useAuth()
-  const addToCartMutation = useAddToCart(user?.id)
   const { data: user } = useUserQuery()
+  const addToCartMutation = useAddToCart(user?.id)
   const { data: favorites = [] } = useFavoritesQuery(user?.id)
   const queryClient = useQueryClient()
 
