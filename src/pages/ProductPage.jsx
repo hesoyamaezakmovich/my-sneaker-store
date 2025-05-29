@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import ProductDetails from '../components/product/ProductDetails'
 import { fetchProductById } from '../services/products.service'
 import { useAuth } from '../hooks/useAuth'
-import { useCart } from '../hooks/useCart'
+import { useAddToCart } from '../hooks/useCartMutations'
 import Button from '../components/ui/Button'
 import { useUserQuery } from '../hooks/useUserQuery'
 
@@ -11,7 +11,7 @@ const ProductPage = () => {
   const { id } = useParams()
   const { setIsAuthModalOpen } = useAuth()
   const { data: user } = useUserQuery()
-  const { addToCart } = useCart()
+  const addToCartMutation = useAddToCart(user?.id)
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -29,7 +29,7 @@ const ProductPage = () => {
     }
     
     try {
-      await addToCart(product.id, sizeId, 1)
+      await addToCartMutation.mutateAsync({ productId: product.id, sizeId, quantity: 1 })
     } catch (error) {
       console.error('Error adding to cart:', error)
     }

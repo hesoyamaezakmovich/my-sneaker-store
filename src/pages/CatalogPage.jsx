@@ -4,7 +4,7 @@ import Input, { Select } from '../components/ui/Input'
 import ProductList from '../components/product/ProductList'
 import { fetchProducts } from '../services/products.service'
 import { useAuth } from '../hooks/useAuth'
-import { useCart } from '../hooks/useCart'
+import { useAddToCart } from '../hooks/useCartMutations'
 import { useUserQuery } from '../hooks/useUserQuery'
 import { useFavoritesQuery } from '../hooks/useFavoritesQuery'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -43,7 +43,7 @@ const SORTS = [
 
 const CatalogPage = () => {
   const { setIsAuthModalOpen } = useAuth()
-  const { addToCart } = useCart()
+  const addToCartMutation = useAddToCart(user?.id)
   const { data: user } = useUserQuery()
   const { data: favorites = [] } = useFavoritesQuery(user?.id)
   const queryClient = useQueryClient()
@@ -84,7 +84,7 @@ const CatalogPage = () => {
       return
     }
     try {
-      await addToCart(product.id, sizeId, 1)
+      await addToCartMutation.mutateAsync({ productId: product.id, sizeId, quantity: 1 })
     } catch (error) {
       console.error('Error adding to cart:', error)
     }
