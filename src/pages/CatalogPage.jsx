@@ -91,30 +91,26 @@ const CatalogPage = () => {
   }
 
   // Мутации для избранного
-  const addFavoriteMutation = useMutation(
-    (productId) => addToFavorites(user.id, productId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['favorites', user.id])
-        toast.success('Добавлено в избранное')
-      },
-      onError: (e) => {
-        toast.error(e.message || 'Ошибка добавления в избранное')
-      }
+  const addFavoriteMutation = useMutation({
+    mutationFn: (productId) => addToFavorites(user.id, productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['favorites', user.id])
+      toast.success('Добавлено в избранное')
+    },
+    onError: (e) => {
+      toast.error(e.message || 'Ошибка добавления в избранное')
     }
-  )
-  const removeFavoriteMutation = useMutation(
-    (productId) => removeFromFavorites(user.id, productId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['favorites', user.id])
-        toast.success('Удалено из избранного')
-      },
-      onError: (e) => {
-        toast.error(e.message || 'Ошибка удаления из избранного')
-      }
+  })
+  const removeFavoriteMutation = useMutation({
+    mutationFn: (productId) => removeFromFavorites(user.id, productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['favorites', user.id])
+      toast.success('Удалено из избранного')
+    },
+    onError: (e) => {
+      toast.error(e.message || 'Ошибка удаления из избранного')
     }
-  )
+  })
 
   // Обработчик избранного
   const handleToggleFavorite = async (product) => {

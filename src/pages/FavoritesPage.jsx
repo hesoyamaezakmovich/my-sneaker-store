@@ -21,18 +21,16 @@ export default function FavoritesPage() {
     enabled: !!user?.id
   })
 
-  const removeMutation = useMutation(
-    (productId) => removeFromFavorites(user.id, productId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['favorites', user.id])
-        toast.success('Удалено из избранного')
-      },
-      onError: (e) => {
-        toast.error(e.message || 'Ошибка удаления из избранного')
-      }
+  const removeMutation = useMutation({
+    mutationFn: (productId) => removeFromFavorites(user.id, productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['favorites', user.id])
+      toast.success('Удалено из избранного')
+    },
+    onError: (e) => {
+      toast.error(e.message || 'Ошибка удаления из избранного')
     }
-  )
+  })
 
   if (userLoading) return <div className="max-w-7xl mx-auto px-4 py-8">Загрузка...</div>
   if (!user) return (
