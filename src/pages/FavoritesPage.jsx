@@ -17,7 +17,9 @@ export default function FavoritesPage() {
     isLoading,
     isError,
     error
-  } = useQuery(['favorites', user?.id], () => fetchFavorites(user.id), {
+  } = useQuery({
+    queryKey: ['favorites', user?.id],
+    queryFn: () => fetchFavorites(user.id),
     enabled: !!user?.id
   })
 
