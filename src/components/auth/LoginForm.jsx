@@ -3,7 +3,6 @@ import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
 
 const LoginForm = ({ onSuccess, onSwitch }) => {
-  console.log('LoginForm rendered')
   const { signIn } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
@@ -15,24 +14,26 @@ const LoginForm = ({ onSuccess, onSwitch }) => {
   }
 
   const handleSubmit = async e => {
-    console.log('handleSubmit called')
     e.preventDefault()
     setLoading(true)
+    setError('')
+    
     try {
       const { error: signInError, data } = await signIn(form.email, form.password)
-      setLoading(false)
-      console.log('signIn finished')
-      console.log('signIn result:', { error: signInError, data })
+      
       if (signInError) {
         setError('Неверный email или пароль')
         toast.error(signInError.message || 'Ошибка входа')
+      } else if (data?.user) {
+        toast.success('Вы успешно вошли!')
+        if (onSuccess) onSuccess()
       }
-      else if (onSuccess) onSuccess()
     } catch (err) {
+      console.error('signIn error:', err)
+      setError('Ошибка входа')
+      toast.error(err.message || 'Ошибка входа')
+    } finally {
       setLoading(false)
-      console.log('signIn threw error:', err)
-      setError('Ошибка входа (catch)')
-      toast.error(err.message || 'Ошибка входа (catch)')
     }
   }
 
@@ -63,7 +64,7 @@ const LoginForm = ({ onSuccess, onSwitch }) => {
         className="btn btn-primary w-full"
         disabled={loading}
       >
-        Войти
+        {loading ? 'Вход...' : 'Войти'}
       </button>
       <div className="text-center text-sm mt-2">
         Нет аккаунта?{' '}

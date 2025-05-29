@@ -4,25 +4,38 @@ import { Heart } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useUserQuery } from '../../hooks/useUserQuery'
 import { useAddToCart } from '../../hooks/useCartMutations'
+import { useAuth } from '../../hooks/useAuth'
 
 const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
   const navigate = useNavigate()
-  const [selectedSize, setSelectedSize] = useState(null)
+  const { setIsAuthModalOpen } = useAuth()
+  const [selectedSizeId, setSelectedSizeId] = useState(null)
   const mainImage = product.images?.find(img => img.is_primary) || product.images?.[0]
   const { data: user } = useUserQuery()
   const addToCartMutation = useAddToCart(user?.id)
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation()
-    if (!selectedSize) {
+    
+    if (!user) {
+      setIsAuthModalOpen(true)
+      return
+    }
+    
+    if (!selectedSizeId) {
       toast.error('Выберите размер')
       return
     }
-    if (!user) {
-      toast.error('Войдите, чтобы добавить в корзину')
-      return
+    
+    try {
+      await addToCartMutation.mutateAsync({ 
+        productId: product.id, 
+        sizeId: selectedSizeId, 
+        quantity: 1 
+      })
+    } catch (error) {
+      console.error('Error adding to cart:', error)
     }
-    addToCartMutation.mutate({ productId: product.id, sizeId: selectedSize, quantity: 1 })
   }
 
   const handleCardClick = () => {
@@ -43,6 +56,7 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
       >
         <Heart size={24} fill={isFavorite ? 'red' : 'none'} />
       </button>
+      
       <div className="flex-1 flex items-center justify-center mb-4">
         <img
           src={mainImage?.image_url || product.image_url}
@@ -50,10 +64,15 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
           className="h-44 object-contain mx-auto drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
         />
       </div>
+      
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">{product.brand?.name}</div>
-          <div className="font-bold text-lg mb-1 line-clamp-2 text-gray-900 leading-tight">{product.name}</div>
+          <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">
+            {product.brand?.name}
+          </div>
+          <div className="font-bold text-lg mb-1 line-clamp-2 text-gray-900 leading-tight">
+            {product.name}
+          </div>
         </div>
         
         {/* Селектор размеров */}
@@ -63,13 +82,13 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
               <button
                 key={sizeItem.id}
                 className={`px-2 py-1 text-xs rounded border transition-all ${
-                  selectedSize === sizeItem.size_id
+                  selectedSizeId === sizeItem.id
                     ? 'bg-black text-white border-black'
                     : 'bg-white text-gray-700 border-gray-300 hover:border-black'
                 }`}
                 onClick={(e) => {
                   e.stopPropagation()
-                  setSelectedSize(sizeItem.size_id)
+                  setSelectedSizeId(sizeItem.id)
                 }}
               >
                 {sizeItem.size?.size_value}
@@ -86,9 +105,9 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
           <button
             className="bg-black text-white rounded-full px-5 py-2 text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleAddToCart}
-            disabled={availableSizes.length === 0}
+            disabled={availableSizes.length === 0 || addToCartMutation.isLoading}
           >
-            В корзину
+            {addToCartMutation.isLoading ? '...' : 'В корзину'}
           </button>
         </div>
       </div>
