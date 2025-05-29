@@ -98,9 +98,9 @@ const HomePage = () => {
       <section className="text-center mt-16">
         <h3 className="text-xl font-semibold mb-2">Не нашли нужную модель?</h3>
         <p className="text-gray-600 mb-4">Переходите в каталог — у нас огромный выбор!</p>
-        <Button as={Link} to="/catalog" size="large" variant="primary">
+        <Link to="/catalog" className="inline-flex items-center justify-center bg-black text-white hover:bg-gray-800 focus:ring-black font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 px-6 py-3 text-lg mt-2">
           Каталог кроссовок
-        </Button>
+        </Link>
       </section>
     </div>
   )
