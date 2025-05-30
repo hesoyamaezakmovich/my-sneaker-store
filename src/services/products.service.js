@@ -89,3 +89,18 @@ export const deleteProduct = async (id) => {
   if (error) throw new Error(handleSupabaseError(error))
   return true
 }
+
+// Получить похожие товары по категории (и исключить текущий товар)
+export const fetchSimilarProducts = async (categoryId, excludeProductId, limit = 4) => {
+  const { data, error } = await supabase
+    .from('products')
+    .select(`*, brand:brands(*), category:categories(*), images:product_images(*), sizes:product_sizes(*, size:sizes(*))`)
+    .eq('is_active', true)
+    .eq('category_id', categoryId)
+    .neq('id', excludeProductId)
+    .limit(limit)
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(handleSupabaseError(error))
+  return data
+}
