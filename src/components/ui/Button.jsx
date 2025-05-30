@@ -2,6 +2,7 @@ import React from 'react'
 import Loader from '../common/Loader'
 
 const Button = ({
+  as: Component = 'button',
   children,
   variant = 'primary',
   size = 'medium',
@@ -70,16 +71,20 @@ const Button = ({
     </>
   )
 
+  // Если это button, прокидываем type, disabled, onClick
+  // Если это Link или другой компонент, не прокидываем type/disabled
+  const extraProps = Component === 'button'
+    ? { type, disabled: disabled || loading, onClick }
+    : { onClick }
+
   return (
-    <button
-      type={type}
+    <Component
       className={combinedStyles}
-      onClick={onClick}
-      disabled={disabled || loading}
+      {...extraProps}
       {...props}
     >
       {content}
-    </button>
+    </Component>
   )
 }
 
