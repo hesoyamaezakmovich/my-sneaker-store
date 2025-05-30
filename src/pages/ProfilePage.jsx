@@ -3,6 +3,7 @@ import { useUserQuery } from '../hooks/useUserQuery'
 import { useProfileQuery } from '../hooks/useProfileQuery'
 import { useUpdateProfile } from '../hooks/useAuthMutations'
 import toast from 'react-hot-toast'
+import UserOrdersPreview from '../components/common/UserOrdersPreview'
 
 export default function ProfilePage() {
   const { data: user, isLoading: userLoading } = useUserQuery()
@@ -63,6 +64,7 @@ export default function ProfilePage() {
           </button>
         )}
       </form>
+      <UserOrdersPreview />
     </div>
   )
 }
