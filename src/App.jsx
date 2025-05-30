@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast'
 import Router from './Router'
 import { AuthProvider } from './contexts/AuthContext'
 import ErrorBoundary from './components/common/ErrorBoundary'
+import { SettingsProvider } from './contexts/SettingsContext'
 
 // Исправленная настройка React Query
 const queryClient = new QueryClient({
@@ -29,29 +30,31 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <Router />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: '#000',
-                  color: '#fff',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#10B981',
-                    secondary: '#fff',
+            <SettingsProvider>
+              <Router />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: '#000',
+                    color: '#fff',
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#EF4444',
-                    secondary: '#fff',
+                  success: {
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#fff',
+                    },
                   },
-                },
-              }}
-            />
+                  error: {
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </SettingsProvider>
           </AuthProvider>
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />

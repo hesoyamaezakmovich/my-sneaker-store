@@ -12,9 +12,16 @@ import {
   Shield,
   RefreshCw
 } from 'lucide-react'
+import { useSettings } from '../../contexts/SettingsContext'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
+  const { settings, loading } = useSettings()
+
+  // fallback значения
+  const storePhone = settings?.store_phone || '8 (800) 123-45-67'
+  const storeEmail = settings?.store_email || "info@bro's-shop.ru"
+  const storeAddress = settings?.store_address || 'Москва, ул. Примерная, 123'
 
   const footerLinks = {
     company: [
@@ -157,22 +164,22 @@ const Footer = () => {
         <div className="mt-16 pt-10 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
             <a
-              href="tel:+78001234567"
+              href={`tel:${storePhone.replace(/[^\d+]/g, '')}`}
               className="flex items-center gap-3 text-gray-500 hover:text-black transition-colors text-base"
             >
               <Phone className="w-5 h-5" />
-              <span>8 (800) 123-45-67</span>
+              <span>{storePhone}</span>
             </a>
             <a
-              href="mailto:info@bro's-shop.ru"
+              href={`mailto:${storeEmail}`}
               className="flex items-center gap-3 text-gray-500 hover:text-black transition-colors text-base"
             >
               <Mail className="w-5 h-5" />
-              <span>info@bro's-shop.ru</span>
+              <span>{storeEmail}</span>
             </a>
             <div className="flex items-center gap-3 text-gray-500">
               <MapPin className="w-5 h-5" />
-              <span>Москва, ул. Примерная, 123</span>
+              <span>{storeAddress}</span>
             </div>
           </div>
 
