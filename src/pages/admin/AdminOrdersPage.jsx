@@ -47,21 +47,69 @@ const AdminOrdersPage = () => {
   const loadOrders = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      
+      // Загружаем заказы
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select(`
-          *,
-          profile:profiles(first_name, last_name, email),
-          items:order_items(
-            *,
-            product:products(name, sku),
-            size:sizes(size_value)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
-      setOrders(data || [])
+      if (ordersError) throw ordersError
+
+      // Для каждого заказа загружаем дополнительные данные
+      const ordersWithDetails = await Promise.all(
+        (ordersData || []).map(async (order) => {
+          // Загружаем профиль пользователя
+          let profile = null
+          if (order.user_id) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('first_name, last_name, email')
+              .eq('id', order.user_id)
+              .single()
+            profile = profileData
+          }
+
+          // Загружаем позиции заказа
+          const { data: itemsData } = await supabase
+            .from('order_items')
+            .select('*')
+            .eq('order_id', order.id)
+
+          // Для каждой позиции загружаем детали товара и размера
+          const itemsWithDetails = await Promise.all(
+            (itemsData || []).map(async (item) => {
+              // Загружаем товар
+              const { data: productData } = await supabase
+                .from('products')
+                .select('name, sku')
+                .eq('id', item.product_id)
+                .single()
+
+              // Загружаем размер
+              const { data: sizeData } = await supabase
+                .from('sizes')
+                .select('size_value')
+                .eq('id', item.size_id)
+                .single()
+
+              return {
+                ...item,
+                product: productData,
+                size: sizeData
+              }
+            })
+          )
+
+          return {
+            ...order,
+            profile,
+            items: itemsWithDetails
+          }
+        })
+      )
+
+      setOrders(ordersWithDetails)
     } catch (error) {
       console.error('Error loading orders:', error)
       toast.error('Ошибка загрузки заказов')

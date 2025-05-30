@@ -22,18 +22,46 @@ const AdminUsersPage = () => {
   const loadUsers = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      
+      // Загружаем пользователей
+      const { data: usersData, error: usersError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          orders:orders(count),
-          favorites:favorites(count),
-          cart_items:cart_items(count)
-        `)
+        .select('*')
         .order(sortField, { ascending: sortDirection === 'asc' })
 
-      if (error) throw error
-      setUsers(data || [])
+      if (usersError) throw usersError
+
+      // Для каждого пользователя загружаем статистику
+      const usersWithStats = await Promise.all(
+        (usersData || []).map(async (user) => {
+          // Подсчитываем заказы
+          const { count: ordersCount } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+
+          // Подсчитываем избранное
+          const { count: favoritesCount } = await supabase
+            .from('favorites')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+
+          // Подсчитываем товары в корзине
+          const { count: cartItemsCount } = await supabase
+            .from('cart_items')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+
+          return {
+            ...user,
+            orders: [{ count: ordersCount || 0 }],
+            favorites: [{ count: favoritesCount || 0 }],
+            cart_items: [{ count: cartItemsCount || 0 }]
+          }
+        })
+      )
+
+      setUsers(usersWithStats)
     } catch (error) {
       console.error('Error loading users:', error)
       toast.error('Ошибка загрузки пользователей')
@@ -41,7 +69,7 @@ const AdminUsersPage = () => {
       setLoading(false)
     }
   }
-
+  
   const toggleAdminStatus = async (userId, currentIsAdmin) => {
     try {
       const { error } = await supabase
