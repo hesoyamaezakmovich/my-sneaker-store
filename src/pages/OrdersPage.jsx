@@ -4,6 +4,7 @@ import { Package } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUserQuery } from '../hooks/useUserQuery'
 import toast from 'react-hot-toast'
+import { ORDER_STATUS_LABELS } from '../utils/constants'
 
 export default function OrdersPage() {
   const { data: user, isLoading: authLoading } = useUserQuery()
@@ -64,7 +65,7 @@ export default function OrdersPage() {
               </div>
               <div className="flex-1" />
               <div className="text-lg font-bold">{order.total_amount?.toLocaleString()} ₽</div>
-              <div className="text-sm px-3 py-1 rounded bg-gray-100 font-medium ml-2">{order.status}</div>
+              <div className="text-sm px-3 py-1 rounded bg-gray-100 font-medium ml-2">{ORDER_STATUS_LABELS[order.status] || order.status}</div>
               <button
                 className="ml-4 text-blue-600 hover:underline"
                 onClick={() => handleDetails(order)}
