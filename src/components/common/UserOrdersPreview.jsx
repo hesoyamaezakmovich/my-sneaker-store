@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { fetchOrdersByUser } from '../../services/orders.service'
 import { useUserQuery } from '../../hooks/useUserQuery'
 import { useNavigate } from 'react-router-dom'
+import { ORDER_STATUS_LABELS } from '../../utils/constants'
 
 export default function UserOrdersPreview() {
   const { data: user } = useUserQuery()
@@ -33,7 +34,7 @@ export default function UserOrdersPreview() {
             </div>
             <div className="flex-1" />
             <div className="text-lg font-bold">{order.total_amount?.toLocaleString()} ₽</div>
-            <div className="text-sm px-3 py-1 rounded bg-gray-100 font-medium ml-2">{order.status}</div>
+            <div className="text-sm px-3 py-1 rounded bg-gray-100 font-medium ml-2">{ORDER_STATUS_LABELS[order.status] || order.status}</div>
           </div>
         ))}
       </div>
