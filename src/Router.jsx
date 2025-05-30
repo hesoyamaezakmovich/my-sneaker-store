@@ -35,6 +35,8 @@ const AdminProductEditPage = lazy(() => import('./pages/admin/AdminProductEditPa
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'))
 const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage'))
+const AdminDeliveryPage = lazy(() => import('./pages/admin/AdminDeliveryPage'))
+const AdminStatsPage = lazy(() => import('./pages/admin/AdminStatsPage'))
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'))
 
 function Router() {
@@ -82,6 +84,8 @@ function Router() {
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="categories" element={<AdminCategoriesPage />} />
+            <Route path="delivery" element={<AdminDeliveryPage />} />
+            <Route path="stats" element={<AdminStatsPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
