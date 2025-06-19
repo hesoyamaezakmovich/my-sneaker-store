@@ -1,10 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Получаем переменные окружения
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Проверяем наличие переменных
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Отсутствуют переменные окружения Supabase. Проверьте файл .env')
 }
@@ -17,13 +15,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     storage: window.localStorage,
     storageKey: 'bro-shop-auth-token',
-    // Убираем flowType: 'pkce' если не используем OAuth
   },
   global: {
     headers: {
       'x-application-name': 'bro-shop'
     },
-    // Добавляем таймаут для всех запросов
     fetch: (url, options = {}) => {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 секунд
@@ -36,7 +32,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       })
     }
   },
-  // Добавляем настройки для реалтайма (если используется)
   realtime: {
     params: {
       eventsPerSecond: 2
@@ -44,7 +39,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-// Хелпер для обработки ошибок Supabase
 export const handleSupabaseError = (error) => {
   if (error) {
     console.error('Supabase error:', error)

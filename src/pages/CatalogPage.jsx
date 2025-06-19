@@ -90,7 +90,6 @@ const CatalogPage = () => {
     }
   }
 
-  // Мутации для избранного
   const addFavoriteMutation = useMutation({
     mutationFn: (productId) => addToFavorites(user.id, productId),
     onSuccess: () => {

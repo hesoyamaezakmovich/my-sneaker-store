@@ -16,14 +16,17 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
 
   const handleAddToCart = async (e) => {
     e.stopPropagation()
+    console.log('Пользователь пытается добавить в корзину', { productId: product.id, selectedSizeId })
     
     if (!user) {
       setIsAuthModalOpen(true)
+      console.log('Открытие модального окна авторизации')
       return
     }
     
     if (!selectedSizeId) {
       toast.error('Выберите размер')
+      console.log('Ошибка: размер не выбран')
       return
     }
     
@@ -33,12 +36,14 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
         sizeId: selectedSizeId, 
         quantity: 1 
       })
+      console.log('Товар добавлен в корзину', { productId: product.id, sizeId: selectedSizeId })
     } catch (error) {
       console.error('Error adding to cart:', error)
     }
   }
 
   const handleCardClick = () => {
+    console.log('Переход к карточке товара', { productId: product.id })
     navigate(`/product/${product.id}`)
   }
 
@@ -51,7 +56,7 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
     >
       <button
         className={`absolute top-4 right-4 z-10 text-gray-300 hover:text-red-500 transition-colors bg-white/80 rounded-full p-1 shadow ${isFavorite ? 'text-red-500' : ''}`}
-        onClick={e => { e.stopPropagation(); onToggleFavorite(product) }}
+        onClick={e => { e.stopPropagation(); onToggleFavorite(product); console.log('Пользователь добавил/убрал из избранного', { productId: product.id }) }}
         aria-label="Добавить в избранное"
       >
         <Heart size={24} fill={isFavorite ? 'red' : 'none'} />
@@ -89,6 +94,7 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
                 onClick={(e) => {
                   e.stopPropagation()
                   setSelectedSizeId(sizeItem.id)
+                  console.log('Пользователь выбрал размер', { productId: product.id, sizeId: sizeItem.id })
                 }}
               >
                 {sizeItem.size?.size_value}
