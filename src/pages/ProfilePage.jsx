@@ -40,6 +40,16 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     try {
       await signOut()
+      
+      // Очищаем весь кэш React Query
+      queryClient.clear()
+      
+      // Или очищаем конкретные запросы
+      // queryClient.removeQueries(['user'])
+      // queryClient.removeQueries(['profile'])
+      // queryClient.removeQueries(['cart'])
+      // queryClient.removeQueries(['favorites'])
+      
       toast.success('Вы успешно вышли из аккаунта')
       navigate('/')
     } catch (error) {
