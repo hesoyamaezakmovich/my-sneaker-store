@@ -135,3 +135,31 @@ body {
     @apply px-4;
   }
 }
+
+/* Крестик для закрытия toast */
+[data-hot-toast] > div {
+  position: relative;
+  cursor: pointer;
+}
+
+[data-hot-toast] > div::after {
+  content: '×';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+[data-hot-toast] > div:hover::after {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* Обработчик клика для закрытия */
+[data-hot-toast] > div {
+  pointer-events: auto;
+}

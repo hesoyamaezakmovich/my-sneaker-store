@@ -35,10 +35,13 @@ function App() {
               <Toaster
                 position="top-right"
                 toastOptions={{
-                  duration: 3000,
+                  duration: 5000, // Увеличим время показа
                   style: {
                     background: '#000',
                     color: '#fff',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    cursor: 'pointer', // Показываем что можно кликнуть
                   },
                   success: {
                     iconTheme: {
@@ -52,6 +55,11 @@ function App() {
                       secondary: '#fff',
                     },
                   },
+                }}
+                // Добавляем подсказку что можно кликнуть для закрытия
+                containerStyle={{
+                  top: 20,
+                  right: 20,
                 }}
               />
             </SettingsProvider>
