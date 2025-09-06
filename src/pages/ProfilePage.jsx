@@ -7,6 +7,7 @@ import { useUpdateProfile } from '../hooks/useAuthMutations'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
 import UserOrdersPreview from '../components/common/UserOrdersPreview'
+import { supabase } from '../services/supabase'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -37,25 +38,12 @@ export default function ProfilePage() {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      
-      // Очищаем весь кэш React Query
-      queryClient.clear()
-      
-      // Или очищаем конкретные запросы
-      // queryClient.removeQueries(['user'])
-      // queryClient.removeQueries(['profile'])
-      // queryClient.removeQueries(['cart'])
-      // queryClient.removeQueries(['favorites'])
-      
-      toast.success('Вы успешно вышли из аккаунта')
-      navigate('/')
-    } catch (error) {
-      toast.error('Ошибка при выходе')
-    }
-  }
+const handleLogout = async () => {
+  queryClient.clear()
+  await supabase.auth.signOut()
+  toast.success('Вы успешно вышли из аккаунта')
+  navigate('/')
+}
 
   if (userLoading || profileLoading || !form) return <div className="max-w-2xl mx-auto px-4 py-8">Загрузка...</div>
   if (!user) return (
