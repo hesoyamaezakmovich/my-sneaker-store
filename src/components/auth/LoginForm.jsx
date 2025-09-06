@@ -25,6 +25,12 @@ const LoginForm = ({ onSuccess, onSwitch }) => {
         setError('Неверный email или пароль')
         toast.error(signInError.message || 'Ошибка входа')
       } else if (data?.user) {
+        // Инвалидируем все запросы пользователя после входа
+        queryClient.invalidateQueries(['user'])
+        queryClient.invalidateQueries(['profile'])
+        queryClient.invalidateQueries(['cart'])
+        queryClient.invalidateQueries(['favorites'])
+        
         toast.success('Вы успешно вошли!')
         if (onSuccess) onSuccess()
       }
