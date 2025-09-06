@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
-import { useUserQuery } from '../hooks/useUserQuery'
+import { useQueryClient } from '@tanstack/react-query'
 import { useProfileQuery } from '../hooks/useProfileQuery'
 import { useUpdateProfile } from '../hooks/useAuthMutations'
 import { useAuth } from '../hooks/useAuth'
@@ -11,6 +11,7 @@ import { supabase } from '../services/supabase'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { signOut } = useAuth()
   const { data: user, isLoading: userLoading } = useUserQuery()
   const { data: profile, isLoading: profileLoading } = useProfileQuery(user?.id)
