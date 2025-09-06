@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
 
 const LoginForm = ({ onSuccess, onSwitch }) => {
   const { signIn } = useAuth()
+  const queryClient = useQueryClient()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
