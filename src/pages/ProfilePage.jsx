@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
 import { useUserQuery } from '../hooks/useUserQuery'
 import { useProfileQuery } from '../hooks/useProfileQuery'
 import { useUpdateProfile } from '../hooks/useAuthMutations'
+import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
 import UserOrdersPreview from '../components/common/UserOrdersPreview'
 
 export default function ProfilePage() {
+  const navigate = useNavigate()
+  const { signOut } = useAuth()
   const { data: user, isLoading: userLoading } = useUserQuery()
   const { data: profile, isLoading: profileLoading } = useProfileQuery(user?.id)
   const updateProfileMutation = useUpdateProfile()
@@ -32,6 +37,16 @@ export default function ProfilePage() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      toast.success('Вы успешно вышли из аккаунта')
+      navigate('/')
+    } catch (error) {
+      toast.error('Ошибка при выходе')
+    }
+  }
+
   if (userLoading || profileLoading || !form) return <div className="max-w-2xl mx-auto px-4 py-8">Загрузка...</div>
   if (!user) return (
     <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col items-center justify-center text-gray-400">
@@ -42,7 +57,16 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Профиль</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Профиль</h1>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 text-red-600 hover:text-red-800 font-medium transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+          Выйти
+        </button>
+      </div>
       <form className="bg-white rounded-xl shadow p-6" onSubmit={handleSave}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input name="first_name" value={form.first_name || ''} onChange={handleChange} required placeholder="Имя" className="input" disabled={!edit} />
