@@ -25,7 +25,7 @@ const LoginForm = ({ onSuccess, onSwitch }) => {
       
       if (signInError) {
         setError('Неверный email или пароль')
-        toast.error(signInError.message || 'Ошибка входа')
+        showError(signInError.message || 'Ошибка входа')
       } else if (data?.user) {
         // Инвалидируем все запросы пользователя после входа
         queryClient.invalidateQueries(['user'])
@@ -33,13 +33,13 @@ const LoginForm = ({ onSuccess, onSwitch }) => {
         queryClient.invalidateQueries(['cart'])
         queryClient.invalidateQueries(['favorites'])
         
-        toast.success('Вы успешно вошли!')
+        success('Вы успешно вошли!')
         if (onSuccess) onSuccess()
       }
     } catch (err) {
       console.error('signIn error:', err)
       setError('Ошибка входа')
-      toast.error(err.message || 'Ошибка входа')
+      showError(err.message || 'Ошибка входа')
     } finally {
       setLoading(false)
     }

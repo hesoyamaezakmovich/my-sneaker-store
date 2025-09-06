@@ -34,16 +34,16 @@ export default function ProfilePage() {
     try {
       await updateProfileMutation.mutateAsync({ userId: user.id, updates: form })
       setEdit(false)
-      toast.success('Профиль успешно сохранён!')
+      success('Профиль успешно сохранён!')
     } catch {
-      toast.error('Ошибка сохранения профиля')
+      showError('Ошибка сохранения профиля')
     }
   }
 
   const handleLogout = async () => {
     queryClient.clear()
     await supabase.auth.signOut()
-    toast.success('Вы успешно вышли из аккаунта')
+    success('Вы успешно вышли из аккаунта')
     navigate('/')
   }
 
