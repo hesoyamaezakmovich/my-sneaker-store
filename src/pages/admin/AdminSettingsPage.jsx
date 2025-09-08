@@ -13,8 +13,10 @@ import {
 } from 'lucide-react'
 import { supabase, handleSupabaseError, safeSupabaseCall } from '../../services/supabase'
 import toast from 'react-hot-toast'
+import { useSettings } from '../../contexts/SettingsContext'
 
 const AdminSettingsPage = () => {
+  const { settings: globalSettings, updateSettings: updateGlobalSettings } = useSettings()
   const [settings, setSettings] = useState({
     // Общие настройки магазина
     store_name: 'BRO\'S SHOP',
@@ -187,6 +189,9 @@ const AdminSettingsPage = () => {
       toast.success('Настройки успешно сохранены')
       setOriginalSettings({ ...settings })
       setHasChanges(false)
+      
+      // Обновляем глобальные настройки для мгновенного применения
+      updateGlobalSettings(settings)
     } catch (error) {
       console.error('Error saving settings:', error)
       const errorMessage = handleSupabaseError(error)

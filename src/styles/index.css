@@ -1,5 +1,12 @@
 @import './tailwind.css';
 
+/* CSS переменные для настроек темы */
+:root {
+  --primary-color: #000000;
+  --secondary-color: #ffffff;
+  --accent-color: #3b82f6;
+}
+
 /* Базовые стили */
 * {
   margin: 0;

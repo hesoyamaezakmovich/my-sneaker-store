@@ -5,10 +5,12 @@ import toast from 'react-hot-toast'
 import { useUserQuery } from '../../hooks/useUserQuery'
 import { useAddToCart } from '../../hooks/useCartMutations'
 import { useAuth } from '../../hooks/useAuth'
+import { useSettings } from '../../contexts/SettingsContext'
 
 const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
   const navigate = useNavigate()
   const { setIsAuthModalOpen } = useAuth()
+  const { settings } = useSettings()
   const [selectedSizeId, setSelectedSizeId] = useState(null)
   const mainImage = product.images?.find(img => img.is_primary) || product.images?.[0]
   const { data: user } = useUserQuery()
@@ -72,9 +74,36 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
       
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">
-            {product.brand?.name}
-          </div>
+          {/* Показ логотипа или названия бренда в зависимости от настройки */}
+          {settings?.show_brand_logos ? (
+            <div className="flex items-center mb-2">
+              {product.brand?.logo_url ? (
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={product.brand.logo_url} 
+                    alt={product.brand.name}
+                    className="h-6 w-auto object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      e.target.nextSibling.style.display = 'block'
+                    }}
+                  />
+                  <span className="text-xs text-gray-400 uppercase tracking-wide font-semibold" style={{display: 'none'}}>
+                    {product.brand?.name}
+                  </span>
+                </div>
+              ) : (
+                <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">
+                  {product.brand?.name}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">
+              {product.brand?.name}
+            </div>
+          )}
+          
           <div className="font-bold text-lg mb-1 line-clamp-2 text-gray-900 leading-tight">
             {product.name}
           </div>
@@ -88,9 +117,23 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
                 key={sizeItem.id}
                 className={`px-2 py-1 text-xs rounded border transition-all ${
                   selectedSizeId === sizeItem.id
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-black'
+                    ? 'text-white border-black'
+                    : 'bg-white text-gray-700 border-gray-300'
                 }`}
+                style={selectedSizeId === sizeItem.id ? {
+                  backgroundColor: 'var(--primary-color)',
+                  borderColor: 'var(--primary-color)'
+                } : {}}
+                onMouseEnter={(e) => {
+                  if (selectedSizeId !== sizeItem.id) {
+                    e.target.style.borderColor = 'var(--primary-color)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedSizeId !== sizeItem.id) {
+                    e.target.style.borderColor = ''
+                  }
+                }}
                 onClick={(e) => {
                   e.stopPropagation()
                   setSelectedSizeId(sizeItem.id)
@@ -109,7 +152,20 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
         <div className="flex items-center justify-between">
           <div className="text-xl font-extrabold text-gray-900">{product.price} ₽</div>
           <button
-            className="bg-black text-white rounded-full px-5 py-2 text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white rounded-full px-5 py-2 text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: 'var(--primary-color)',
+              ':hover': {
+                backgroundColor: 'var(--primary-color)',
+                filter: 'brightness(0.9)'
+              }
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.filter = 'brightness(0.9)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.filter = 'brightness(1)'
+            }}
             onClick={handleAddToCart}
             disabled={availableSizes.length === 0 || addToCartMutation.isLoading}
           >
