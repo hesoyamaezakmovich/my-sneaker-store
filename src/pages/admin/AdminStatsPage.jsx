@@ -269,23 +269,24 @@ const AdminStatsPage = () => {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Статистика и аналитика</h1>
+    <div className="p-4 lg:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold">Статистика и аналитика</h1>
         <button
           onClick={exportStats}
-          className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+          className="flex items-center justify-center gap-2 bg-green-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:bg-green-700 transition-colors text-sm lg:text-base"
         >
-          <Download className="w-5 h-5" />
-          Экспорт в CSV
+          <Download className="w-4 h-4 lg:w-5 lg:h-5" />
+          <span className="hidden sm:inline">Экспорт в CSV</span>
+          <span className="sm:hidden">Экспорт</span>
         </button>
       </div>
 
       {/* Фильтры периода */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           <span className="font-medium">Период:</span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {[
               { label: '7 дней', value: '7' },
               { label: '30 дней', value: '30' },
@@ -295,7 +296,7 @@ const AdminStatsPage = () => {
               <button
                 key={value}
                 onClick={() => handlePeriodChange(parseInt(value))}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-4 py-2 rounded-lg transition-colors text-sm ${
                   period === value
                     ? 'bg-black text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -305,115 +306,118 @@ const AdminStatsPage = () => {
               </button>
             ))}
           </div>
-          <div className="ml-4 flex items-center gap-2">
-            <input
-              type="date"
-              value={dateRange.start}
-              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-              className="px-3 py-2 border rounded-lg"
-            />
-            <span>—</span>
-            <input
-              type="date"
-              value={dateRange.end}
-              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-              className="px-3 py-2 border rounded-lg"
-            />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <span className="text-sm text-gray-600">Или выберите период:</span>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="px-3 py-2 border rounded-lg text-sm"
+              />
+              <span>—</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Основные метрики */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Общая выручка</p>
-              <p className="text-2xl font-bold">{formatPrice(stats.totalRevenue)}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs lg:text-sm text-gray-500 mb-1 truncate">Общая выручка</p>
+              <p className="text-lg lg:text-2xl font-bold truncate">{formatPrice(stats.totalRevenue)}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="p-2 lg:p-3 bg-green-100 rounded-lg flex-shrink-0">
+              <DollarSign className="w-5 h-5 lg:w-6 lg:h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Всего заказов</p>
-              <p className="text-2xl font-bold">{stats.totalOrders}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs lg:text-sm text-gray-500 mb-1 truncate">Всего заказов</p>
+              <p className="text-lg lg:text-2xl font-bold">{stats.totalOrders}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <ShoppingCart className="w-6 h-6 text-blue-600" />
+            <div className="p-2 lg:p-3 bg-blue-100 rounded-lg flex-shrink-0">
+              <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Пользователей</p>
-              <p className="text-2xl font-bold">{stats.totalUsers}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs lg:text-sm text-gray-500 mb-1 truncate">Пользователей</p>
+              <p className="text-lg lg:text-2xl font-bold">{stats.totalUsers}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Users className="w-6 h-6 text-purple-600" />
+            <div className="p-2 lg:p-3 bg-purple-100 rounded-lg flex-shrink-0">
+              <Users className="w-5 h-5 lg:w-6 lg:h-6 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Товаров</p>
-              <p className="text-2xl font-bold">{stats.totalProducts}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs lg:text-sm text-gray-500 mb-1 truncate">Товаров</p>
+              <p className="text-lg lg:text-2xl font-bold">{stats.totalProducts}</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Package className="w-6 h-6 text-orange-600" />
+            <div className="p-2 lg:p-3 bg-orange-100 rounded-lg flex-shrink-0">
+              <Package className="w-5 h-5 lg:w-6 lg:h-6 text-orange-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Средний чек</p>
-              <p className="text-2xl font-bold">{formatPrice(stats.avgOrderValue)}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs lg:text-sm text-gray-500 mb-1 truncate">Средний чек</p>
+              <p className="text-lg lg:text-2xl font-bold truncate">{formatPrice(stats.avgOrderValue)}</p>
             </div>
-            <div className="p-3 bg-teal-100 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-teal-600" />
+            <div className="p-2 lg:p-3 bg-teal-100 rounded-lg flex-shrink-0">
+              <TrendingUp className="w-5 h-5 lg:w-6 lg:h-6 text-teal-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Конверсия</p>
-              <p className="text-2xl font-bold">{stats.conversionRate.toFixed(1)}%</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs lg:text-sm text-gray-500 mb-1 truncate">Конверсия</p>
+              <p className="text-lg lg:text-2xl font-bold">{stats.conversionRate.toFixed(1)}%</p>
             </div>
-            <div className="p-3 bg-pink-100 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-pink-600" />
+            <div className="p-2 lg:p-3 bg-pink-100 rounded-lg flex-shrink-0">
+              <BarChart3 className="w-5 h-5 lg:w-6 lg:h-6 text-pink-600" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 mb-8">
         {/* График продаж по дням */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Продажи по дням</h2>
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
+          <h2 className="text-base lg:text-lg font-semibold mb-4">Продажи по дням</h2>
           {periodStats.length > 0 ? (
             <div className="space-y-2">
               {periodStats.slice(-10).map((day, index) => (
-                <div key={day.date} className="flex items-center justify-between py-2">
-                  <div className="text-sm">
+                <div key={day.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                  <div className="text-xs lg:text-sm font-medium">
                     {new Date(day.date).toLocaleDateString('ru-RU')}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-gray-600">
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-4">
+                    <div className="text-xs lg:text-sm text-gray-600">
                       {day.orders} заказов
                     </div>
-                    <div className="font-medium">
+                    <div className="font-medium text-sm lg:text-base">
                       {formatPrice(day.revenue)}
                     </div>
                   </div>
@@ -421,85 +425,85 @@ const AdminStatsPage = () => {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">Нет данных за выбранный период</p>
+            <p className="text-gray-500 text-center py-8 text-sm">Нет данных за выбранный период</p>
           )}
         </div>
 
         {/* Топ товары */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Топ товары по выручке</h2>
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
+          <h2 className="text-base lg:text-lg font-semibold mb-4">Топ товары по выручке</h2>
           {topProducts.length > 0 ? (
             <div className="space-y-3">
               {topProducts.slice(0, 5).map((product, index) => (
-                <div key={product.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
+                <div key={product.id} className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium flex-shrink-0">
                       {index + 1}
                     </div>
-                    <div>
-                      <div className="font-medium text-sm">{product.name}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-sm truncate">{product.name}</div>
                       <div className="text-xs text-gray-500">
                         Продано: {product.quantity} шт.
                       </div>
                     </div>
                   </div>
-                  <div className="font-medium">{formatPrice(product.revenue)}</div>
+                  <div className="font-medium text-sm lg:text-base flex-shrink-0">{formatPrice(product.revenue)}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">Нет данных</p>
+            <p className="text-gray-500 text-center py-8 text-sm">Нет данных</p>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
         {/* Топ категории */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Топ категории</h2>
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
+          <h2 className="text-base lg:text-lg font-semibold mb-4">Топ категории</h2>
           {topCategories.length > 0 ? (
             <div className="space-y-3">
               {topCategories.map((category, index) => (
-                <div key={category.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
+                <div key={category.id} className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium flex-shrink-0">
                       {index + 1}
                     </div>
-                    <div>
-                      <div className="font-medium">{category.name}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-sm lg:text-base truncate">{category.name}</div>
                       <div className="text-xs text-gray-500">
                         Продано: {category.quantity} шт.
                       </div>
                     </div>
                   </div>
-                  <div className="font-medium">{formatPrice(category.revenue)}</div>
+                  <div className="font-medium text-sm lg:text-base flex-shrink-0">{formatPrice(category.revenue)}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">Нет данных</p>
+            <p className="text-gray-500 text-center py-8 text-sm">Нет данных</p>
           )}
         </div>
 
         {/* Последние заказы */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Последние заказы</h2>
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
+          <h2 className="text-base lg:text-lg font-semibold mb-4">Последние заказы</h2>
           {recentOrders.length > 0 ? (
             <div className="space-y-3">
               {recentOrders.slice(0, 5).map((order) => (
-                <div key={order.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                  <div>
-                    <div className="font-medium text-sm">#{order.order_number}</div>
-                    <div className="text-xs text-gray-500">
+                <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 border-b border-gray-100 last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">#{order.order_number}</div>
+                    <div className="text-xs text-gray-500 truncate">
                       {`${order.profile?.first_name || ''} ${order.profile?.last_name || ''}`.trim() || 'Гость'}
                     </div>
                     <div className="text-xs text-gray-400">
                       {new Date(order.created_at).toLocaleDateString('ru-RU')}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium">{formatPrice(order.total_amount)}</div>
-                    <div className={`text-xs px-2 py-1 rounded ${
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:gap-1">
+                    <div className="font-medium text-sm lg:text-base">{formatPrice(order.total_amount)}</div>
+                    <div className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
                       order.status === 'delivered' ? 'bg-green-100 text-green-800' :
                       order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-gray-100 text-gray-800'
@@ -511,7 +515,7 @@ const AdminStatsPage = () => {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">Нет заказов</p>
+            <p className="text-gray-500 text-center py-8 text-sm">Нет заказов</p>
           )}
         </div>
       </div>
