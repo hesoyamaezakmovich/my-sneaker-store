@@ -44,22 +44,39 @@ export const supportService = {
 
   // Получить все чаты для админа
   async getAllChats() {
-    const { data, error } = await supabase
+    const { data: chats, error } = await supabase
       .from('support_chats')
-      .select(`
-        *,
-        user:profiles(id, name, email),
-        messages:support_messages(
-          id,
-          message,
-          created_at,
-          is_admin
-        )
-      `)
+      .select('*')
       .order('updated_at', { ascending: false })
 
     if (error) throw error
-    return data
+    
+    // Получаем данные пользователей и сообщения отдельно для каждого чата
+    const chatsWithDetails = await Promise.all(
+      chats.map(async (chat) => {
+        // Получаем профиль пользователя
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .eq('id', chat.user_id)
+          .single()
+        
+        // Получаем сообщения чата
+        const { data: messages } = await supabase
+          .from('support_messages')
+          .select('id, message, created_at, is_admin')
+          .eq('chat_id', chat.id)
+          .order('created_at', { ascending: true })
+        
+        return {
+          ...chat,
+          user: profile,
+          messages: messages || []
+        }
+      })
+    )
+
+    return chatsWithDetails
   },
 
   // Получить сообщения чата

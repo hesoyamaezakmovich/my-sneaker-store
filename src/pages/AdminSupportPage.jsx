@@ -108,7 +108,9 @@ const AdminSupportPage = () => {
                           <User className="w-4 h-4 text-gray-500" />
                           <div>
                             <p className="font-medium text-sm text-gray-900">
-                              {chat.user?.name || 'Пользователь'}
+                              {chat.user?.first_name && chat.user?.last_name 
+                                ? `${chat.user.first_name} ${chat.user.last_name}` 
+                                : chat.user?.first_name || 'Пользователь'}
                             </p>
                             <p className="text-xs text-gray-500">
                               {chat.user?.email}
@@ -161,7 +163,9 @@ const AdminSupportPage = () => {
                     <User className="w-6 h-6 text-gray-500" />
                     <div>
                       <h3 className="font-semibold text-gray-900">
-                        {selectedChat.user?.name || 'Пользователь'}
+                        {selectedChat.user?.first_name && selectedChat.user?.last_name 
+                          ? `${selectedChat.user.first_name} ${selectedChat.user.last_name}` 
+                          : selectedChat.user?.first_name || 'Пользователь'}
                       </h3>
                       <p className="text-sm text-gray-600">
                         {selectedChat.user?.email}
