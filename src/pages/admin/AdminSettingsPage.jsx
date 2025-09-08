@@ -86,9 +86,11 @@ const AdminSettingsPage = () => {
       setLoading(true)
       
       // Загружаем настройки из базы данных с повторными попытками
-      const { data, error } = await safeSupabaseCall(() => 
-        supabase.from('settings').select('*')
+      const result = await safeSupabaseCall(async () => 
+        await supabase.from('settings').select('*')
       )
+      
+      const { data, error } = result
 
       if (error && error.code !== 'PGRST116') {
         throw error
@@ -117,11 +119,20 @@ const AdminSettingsPage = () => {
           }
         })
         
-        setSettings(prev => ({ ...prev, ...settingsObj }))
-        setOriginalSettings({ ...settings, ...settingsObj })
+        const newSettings = { ...settings, ...settingsObj }
+        setSettings(newSettings)
+        setOriginalSettings(newSettings)
         toast.success('Настройки загружены')
       } else {
-        toast.info('Настройки не найдены. Используются значения по умолчанию.')
+        // Если настройки не найдены, используем значения по умолчанию
+        setOriginalSettings(settings)
+        toast('Настройки не найдены. Используются значения по умолчанию.', {
+          icon: 'ℹ️',
+          style: {
+            background: '#3b82f6',
+            color: '#fff',
+          }
+        })
       }
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -163,11 +174,13 @@ const AdminSettingsPage = () => {
       })
 
       // Используем upsert для обновления существующих или вставки новых настроек
-      const { error } = await safeSupabaseCall(() => 
-        supabase
+      const result = await safeSupabaseCall(async () => 
+        await supabase
           .from('settings')
           .upsert(settingsToSave, { onConflict: 'key' })
       )
+      
+      const { error } = result
 
       if (error) throw error
 
