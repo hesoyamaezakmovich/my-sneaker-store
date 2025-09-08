@@ -56,10 +56,12 @@ const AdminStatsPage = () => {
 
   const loadGeneralStats = async () => {
     try {
-      // Общая статистика
+      // Общая статистика за выбранный период
       const { data: orders } = await supabase
         .from('orders')
         .select('total_amount, status, created_at')
+        .gte('created_at', dateRange.start)
+        .lte('created_at', dateRange.end + 'T23:59:59')
 
       const { count: usersCount } = await supabase
         .from('profiles')
@@ -131,8 +133,11 @@ const AdminStatsPage = () => {
           product_name,
           quantity,
           price,
-          product:products(name, sku)
+          product:products(name, sku),
+          order:orders!inner(created_at)
         `)
+        .gte('order.created_at', dateRange.start)
+        .lte('order.created_at', dateRange.end + 'T23:59:59')
 
       // Группируем по товарам
       const productStats = {}
@@ -171,8 +176,11 @@ const AdminStatsPage = () => {
             category:categories(id, name)
           ),
           quantity,
-          price
+          price,
+          order:orders!inner(created_at)
         `)
+        .gte('order.created_at', dateRange.start)
+        .lte('order.created_at', dateRange.end + 'T23:59:59')
 
       // Группируем по категориям
       const categoryStats = {}
@@ -211,6 +219,8 @@ const AdminStatsPage = () => {
           *,
           profile:profiles(first_name, last_name)
         `)
+        .gte('created_at', dateRange.start)
+        .lte('created_at', dateRange.end + 'T23:59:59')
         .order('created_at', { ascending: false })
         .limit(10)
 
@@ -257,7 +267,7 @@ const AdminStatsPage = () => {
   }
 
   const handlePeriodChange = (days) => {
-    setPeriod(days)
+    setPeriod(days.toString())
     setDateRange({
       start: new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       end: new Date().toISOString().split('T')[0]
