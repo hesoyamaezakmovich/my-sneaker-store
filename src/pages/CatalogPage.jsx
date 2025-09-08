@@ -218,13 +218,18 @@ const CatalogPage = () => {
         {/* Products grid */}
         <div className="flex-1">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-white rounded-xl shadow p-4 flex flex-col items-center animate-pulse">
-                  <div className="w-32 h-32 bg-gray-200 rounded-lg mb-3" />
-                  <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
-                  <div className="h-4 w-16 bg-gray-100 rounded mb-2" />
-                  <div className="h-8 w-full bg-gray-200 rounded mt-2" />
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl sm:rounded-3xl shadow p-3 sm:p-4 lg:p-6 flex flex-col items-center animate-pulse min-h-[320px] sm:min-h-[380px] lg:min-h-[420px]">
+                  <div className="w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-gray-200 rounded-lg mb-2 sm:mb-3" />
+                  <div className="h-3 sm:h-4 w-16 sm:w-24 bg-gray-200 rounded mb-1 sm:mb-2" />
+                  <div className="h-3 sm:h-4 w-12 sm:w-16 bg-gray-100 rounded mb-2 sm:mb-3" />
+                  <div className="flex gap-1 mb-2 sm:mb-3">
+                    <div className="h-6 w-8 bg-gray-200 rounded" />
+                    <div className="h-6 w-8 bg-gray-200 rounded" />
+                    <div className="h-6 w-8 bg-gray-200 rounded" />
+                  </div>
+                  <div className="h-6 sm:h-8 w-full bg-gray-200 rounded-full mt-auto" />
                 </div>
               ))}
             </div>
