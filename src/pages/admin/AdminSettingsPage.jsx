@@ -11,7 +11,7 @@ import {
   CreditCard,
   Palette
 } from 'lucide-react'
-import { supabase } from '../../services/supabase'
+import { supabase, handleSupabaseError, safeSupabaseCall } from '../../services/supabase'
 import toast from 'react-hot-toast'
 
 const AdminSettingsPage = () => {
@@ -64,6 +64,8 @@ const AdminSettingsPage = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('general')
+  const [hasChanges, setHasChanges] = useState(false)
+  const [originalSettings, setOriginalSettings] = useState({})
 
   const tabs = [
     { id: 'general', label: 'Общие', icon: Store },
@@ -83,10 +85,10 @@ const AdminSettingsPage = () => {
     try {
       setLoading(true)
       
-      // Загружаем настройки из базы данных
-      const { data, error } = await supabase
-        .from('settings')
-        .select('*')
+      // Загружаем настройки из базы данных с повторными попытками
+      const { data, error } = await safeSupabaseCall(() => 
+        supabase.from('settings').select('*')
+      )
 
       if (error && error.code !== 'PGRST116') {
         throw error
@@ -97,66 +99,158 @@ const AdminSettingsPage = () => {
         const settingsObj = {}
         data.forEach(setting => {
           try {
-            settingsObj[setting.key] = setting.value_type === 'json' 
-              ? JSON.parse(setting.value) 
-              : setting.value
+            // Обрабатываем разные типы данных
+            let value = setting.value
+            
+            if (setting.value_type === 'json') {
+              value = JSON.parse(setting.value)
+            } else if (setting.value_type === 'number') {
+              value = parseFloat(setting.value) || 0
+            } else if (setting.value_type === 'boolean') {
+              value = setting.value === 'true'
+            }
+            
+            settingsObj[setting.key] = value
           } catch (e) {
+            console.warn(`Failed to parse setting ${setting.key}:`, e)
             settingsObj[setting.key] = setting.value
           }
         })
         
         setSettings(prev => ({ ...prev, ...settingsObj }))
+        setOriginalSettings({ ...settings, ...settingsObj })
+        toast.success('Настройки загружены')
+      } else {
+        toast.info('Настройки не найдены. Используются значения по умолчанию.')
       }
     } catch (error) {
       console.error('Error loading settings:', error)
-      toast.error('Ошибка загрузки настроек')
+      const errorMessage = handleSupabaseError(error)
+      toast.error(`Ошибка загрузки настроек: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
   }
 
   const saveSettings = async () => {
+    if (!validateSettings()) {
+      return
+    }
+
     try {
       setSaving(true)
       
       // Подготавливаем данные для сохранения
-      const settingsToSave = Object.entries(settings).map(([key, value]) => ({
-        key,
-        value: typeof value === 'object' ? JSON.stringify(value) : String(value),
-        value_type: typeof value === 'object' ? 'json' : typeof value
-      }))
+      const settingsToSave = Object.entries(settings).map(([key, value]) => {
+        let valueType = typeof value
+        let valueString = String(value)
+        
+        if (typeof value === 'object' && value !== null) {
+          valueType = 'json'
+          valueString = JSON.stringify(value)
+        } else if (typeof value === 'number') {
+          valueType = 'number'
+        } else if (typeof value === 'boolean') {
+          valueType = 'boolean'
+        }
+        
+        return {
+          key,
+          value: valueString,
+          value_type: valueType,
+          updated_at: new Date().toISOString()
+        }
+      })
 
-      // Сначала удаляем все старые настройки
-      await supabase.from('settings').delete().neq('key', '')
-
-      // Затем вставляем новые
-      const { error } = await supabase
-        .from('settings')
-        .insert(settingsToSave)
+      // Используем upsert для обновления существующих или вставки новых настроек
+      const { error } = await safeSupabaseCall(() => 
+        supabase
+          .from('settings')
+          .upsert(settingsToSave, { onConflict: 'key' })
+      )
 
       if (error) throw error
 
-      toast.success('Настройки сохранены')
+      toast.success('Настройки успешно сохранены')
+      setOriginalSettings({ ...settings })
+      setHasChanges(false)
     } catch (error) {
       console.error('Error saving settings:', error)
-      toast.error('Ошибка сохранения настроек')
+      const errorMessage = handleSupabaseError(error)
+      toast.error(`Ошибка сохранения: ${errorMessage}`)
     } finally {
       setSaving(false)
     }
   }
 
+  const validateSettings = () => {
+    // Валидация email
+    if (settings.store_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.store_email)) {
+      toast.error('Неверный формат email')
+      return false
+    }
+
+    // Валидация числовых значений
+    if (settings.min_order_amount < 0) {
+      toast.error('Минимальная сумма заказа не может быть отрицательной')
+      return false
+    }
+
+    if (settings.free_shipping_amount < 0) {
+      toast.error('Сумма для бесплатной доставки не может быть отрицательной')
+      return false
+    }
+
+    if (settings.order_processing_time <= 0) {
+      toast.error('Время обработки заказа должно быть больше 0')
+      return false
+    }
+
+    if (settings.max_login_attempts <= 0) {
+      toast.error('Количество попыток входа должно быть больше 0')
+      return false
+    }
+
+    if (settings.session_timeout <= 0) {
+      toast.error('Время сессии должно быть больше 0')
+      return false
+    }
+
+    // Проверяем что хотя бы один способ оплаты включен
+    if (!Object.values(settings.payment_methods || {}).some(enabled => enabled)) {
+      toast.error('Необходимо включить хотя бы один способ оплаты')
+      return false
+    }
+
+    return true
+  }
+
   const handleInputChange = (key, value) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
+    setSettings(prev => {
+      const newSettings = { ...prev, [key]: value }
+      setHasChanges(JSON.stringify(newSettings) !== JSON.stringify(originalSettings))
+      return newSettings
+    })
   }
 
   const handleNestedChange = (parentKey, childKey, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [parentKey]: {
-        ...prev[parentKey],
-        [childKey]: value
+    setSettings(prev => {
+      const newSettings = {
+        ...prev,
+        [parentKey]: {
+          ...prev[parentKey],
+          [childKey]: value
+        }
       }
-    }))
+      setHasChanges(JSON.stringify(newSettings) !== JSON.stringify(originalSettings))
+      return newSettings
+    })
+  }
+
+  const resetSettings = () => {
+    setSettings(originalSettings)
+    setHasChanges(false)
+    toast.success('Настройки восстановлены')
   }
 
   if (loading) {
@@ -165,16 +259,38 @@ const AdminSettingsPage = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Настройки системы</h1>
-        <button
-          onClick={saveSettings}
-          disabled={saving}
-          className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-        >
-          <Save className="w-5 h-5" />
-          {saving ? 'Сохранение...' : 'Сохранить все'}
-        </button>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Настройки системы</h1>
+          {hasChanges && (
+            <p className="text-sm text-orange-600 mt-1">
+              У вас есть несохраненные изменения
+            </p>
+          )}
+        </div>
+        <div className="flex gap-3">
+          {hasChanges && (
+            <button
+              onClick={resetSettings}
+              disabled={saving}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+            >
+              Сбросить
+            </button>
+          )}
+          <button
+            onClick={saveSettings}
+            disabled={saving || !hasChanges}
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors disabled:opacity-50 ${
+              hasChanges 
+                ? 'bg-green-600 text-white hover:bg-green-700' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            <Save className="w-5 h-5" />
+            {saving ? 'Сохранение...' : 'Сохранить все'}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
