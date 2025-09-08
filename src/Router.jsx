@@ -38,6 +38,7 @@ const AdminCategoriesPage = lazy(() => import('./pages/admin/AdminCategoriesPage
 const AdminDeliveryPage = lazy(() => import('./pages/admin/AdminDeliveryPage'))
 const AdminStatsPage = lazy(() => import('./pages/admin/AdminStatsPage'))
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'))
+const AdminSupportPage = lazy(() => import('./pages/AdminSupportPage'))
 
 function Router() {
   return (
@@ -87,6 +88,7 @@ function Router() {
             <Route path="delivery" element={<AdminDeliveryPage />} />
             <Route path="stats" element={<AdminStatsPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
+            <Route path="support" element={<AdminSupportPage />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
         </Route>

@@ -2,6 +2,7 @@ import React from 'react'
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Footer from './Footer'
+import SupportChat from '../support/SupportChat'
 
 const Layout = () => {
   return (
@@ -13,6 +14,8 @@ const Layout = () => {
       </main>
       
       <Footer />
+      
+      <SupportChat />
     </div>
   )
 }

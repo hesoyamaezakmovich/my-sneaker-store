@@ -9,7 +9,8 @@ import {
   Home,
   LogOut,
   Tags,
-  Truck
+  Truck,
+  MessageCircle
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -24,6 +25,7 @@ const AdminLayout = () => {
     { name: 'Пользователи', href: '/admin/users', icon: Users },
     { name: 'Категории', href: '/admin/categories', icon: Tags },
     { name: 'Доставка', href: '/admin/delivery', icon: Truck },
+    { name: 'Поддержка', href: '/admin/support', icon: MessageCircle },
     { name: 'Статистика', href: '/admin/stats', icon: BarChart3 },
     { name: 'Настройки', href: '/admin/settings', icon: Settings },
   ]
