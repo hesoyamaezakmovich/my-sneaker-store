@@ -65,6 +65,11 @@ export const SettingsProvider = ({ children }) => {
     }
   }, []);
 
+  const updateSettings = useCallback((newSettings) => {
+    const updatedSettings = { ...settings, ...newSettings }
+    setSettings(updatedSettings)
+  }, [settings])
+
   const applyCSSVariables = useCallback(() => {
     if (settings) {
       const root = document.documentElement
@@ -87,6 +92,7 @@ export const SettingsProvider = ({ children }) => {
     loading,
     error,
     refetch: fetchSettings,
+    updateSettings,
   };
 
   return (
