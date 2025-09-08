@@ -53,22 +53,22 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
 
   return (
     <div
-      className="group bg-white rounded-3xl border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-200 p-6 flex flex-col relative cursor-pointer overflow-hidden hover:-translate-y-1 min-h-[420px]"
+      className="group bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-200 p-3 sm:p-4 lg:p-6 flex flex-col relative cursor-pointer overflow-hidden hover:-translate-y-1 min-h-[320px] sm:min-h-[380px] lg:min-h-[420px]"
       onClick={handleCardClick}
     >
       <button
-        className={`absolute top-4 right-4 z-10 text-gray-300 hover:text-red-500 transition-colors bg-white/80 rounded-full p-1 shadow ${isFavorite ? 'text-red-500' : ''}`}
+        className={`absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 z-10 text-gray-300 hover:text-red-500 transition-colors bg-white/80 rounded-full p-1 shadow ${isFavorite ? 'text-red-500' : ''}`}
         onClick={e => { e.stopPropagation(); onToggleFavorite(product); console.log('Пользователь добавил/убрал из избранного', { productId: product.id }) }}
         aria-label="Добавить в избранное"
       >
-        <Heart size={24} fill={isFavorite ? 'red' : 'none'} />
+        <Heart className="w-5 h-5 sm:w-6 sm:h-6" fill={isFavorite ? 'red' : 'none'} />
       </button>
       
-      <div className="flex-1 flex items-center justify-center mb-4">
+      <div className="flex-1 flex items-center justify-center mb-2 sm:mb-3 lg:mb-4">
         <img
           src={mainImage?.image_url || product.image_url}
           alt={product.name}
-          className="h-44 object-contain mx-auto drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
+          className="h-24 sm:h-32 md:h-36 lg:h-44 w-auto object-contain mx-auto drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
         />
       </div>
       
@@ -76,13 +76,13 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
         <div>
           {/* Показ логотипа или названия бренда в зависимости от настройки */}
           {settings?.show_brand_logos ? (
-            <div className="flex items-center mb-2">
+            <div className="flex items-center mb-1 sm:mb-2">
               {product.brand?.logo_url ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <img 
                     src={product.brand.logo_url} 
                     alt={product.brand.name}
-                    className="h-6 w-auto object-contain"
+                    className="h-4 sm:h-5 lg:h-6 w-auto object-contain"
                     onError={(e) => {
                       e.target.style.display = 'none'
                       e.target.nextSibling.style.display = 'block'
@@ -93,7 +93,7 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
                   </span>
                 </div>
               ) : (
-                <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">
+                <div className="text-xs text-gray-400 uppercase tracking-wide font-semibold">
                   {product.brand?.name}
                 </div>
               )}
@@ -104,18 +104,18 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
             </div>
           )}
           
-          <div className="font-bold text-lg mb-1 line-clamp-2 text-gray-900 leading-tight">
+          <div className="font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 line-clamp-2 text-gray-900 leading-tight">
             {product.name}
           </div>
         </div>
         
         {/* Селектор размеров */}
-        <div className="mb-3" onClick={e => e.stopPropagation()}>
-          <div className="flex flex-wrap gap-1">
+        <div className="mb-2 sm:mb-3" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-wrap gap-1 sm:gap-1.5">
             {availableSizes.map((sizeItem) => (
               <button
                 key={sizeItem.id}
-                className={`px-2 py-1 text-xs rounded border transition-all ${
+                className={`px-1.5 sm:px-2 py-1 text-xs rounded border transition-all ${
                   selectedSizeId === sizeItem.id
                     ? 'text-white border-black'
                     : 'bg-white text-gray-700 border-gray-300'
@@ -149,10 +149,12 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
           )}
         </div>
         
-        <div className="flex items-center justify-between">
-          <div className="text-xl font-extrabold text-gray-900">{product.price} ₽</div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+          <div className="text-base sm:text-lg lg:text-xl font-extrabold text-gray-900 order-2 sm:order-1">
+            {product.price} ₽
+          </div>
           <button
-            className="text-white rounded-full px-5 py-2 text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-white rounded-full px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 text-sm sm:text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto order-1 sm:order-2"
             style={{
               backgroundColor: 'var(--primary-color)',
               ':hover': {
