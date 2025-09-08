@@ -53,7 +53,7 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
 
   return (
     <div
-      className="group bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-200 p-3 sm:p-4 lg:p-6 flex flex-col relative cursor-pointer overflow-hidden hover:-translate-y-1 min-h-[320px] sm:min-h-[380px] lg:min-h-[420px]"
+      className="group bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-200 p-3 sm:p-4 lg:p-5 xl:p-4 flex flex-col relative cursor-pointer overflow-hidden hover:-translate-y-1 min-h-[300px] sm:min-h-[340px] lg:min-h-[380px] xl:min-h-[360px]"
       onClick={handleCardClick}
     >
       <button
@@ -68,7 +68,7 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
         <img
           src={mainImage?.image_url || product.image_url}
           alt={product.name}
-          className="h-24 sm:h-32 md:h-36 lg:h-44 w-auto object-contain mx-auto drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
+          className="h-20 sm:h-28 md:h-32 lg:h-36 xl:h-32 w-auto object-contain mx-auto drop-shadow-lg transition-transform duration-200 group-hover:scale-110"
         />
       </div>
       
@@ -99,12 +99,12 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
               )}
             </div>
           ) : (
-            <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">
+            <div className="text-xs xl:text-xs text-gray-400 mb-1 uppercase tracking-wide font-semibold">
               {product.brand?.name}
             </div>
           )}
           
-          <div className="font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2 line-clamp-2 text-gray-900 leading-tight">
+          <div className="font-bold text-sm sm:text-base lg:text-lg xl:text-base mb-1 sm:mb-2 line-clamp-2 text-gray-900 leading-tight">
             {product.name}
           </div>
         </div>
@@ -150,11 +150,11 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
         </div>
         
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-          <div className="text-base sm:text-lg lg:text-xl font-extrabold text-gray-900 order-2 sm:order-1">
+          <div className="text-base sm:text-lg lg:text-xl xl:text-lg font-extrabold text-gray-900 order-2 sm:order-1">
             {product.price} ₽
           </div>
           <button
-            className="text-white rounded-full px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 text-sm sm:text-base font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto order-1 sm:order-2"
+            className="text-white rounded-full px-3 sm:px-3 lg:px-4 xl:px-3 py-1.5 sm:py-2 xl:py-1.5 text-xs sm:text-sm lg:text-base xl:text-sm font-semibold shadow-lg transition-all duration-200 opacity-90 group-hover:opacity-100 group-hover:scale-105 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto order-1 sm:order-2 whitespace-nowrap"
             style={{
               backgroundColor: 'var(--primary-color)',
               ':hover': {
