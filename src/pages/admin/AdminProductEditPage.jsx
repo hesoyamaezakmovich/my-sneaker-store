@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Upload, X } from 'lucide-react'
 import { fetchProductById, addProduct, updateProduct, fetchCategories, fetchBrands } from '../../services/products.service'
@@ -28,11 +28,7 @@ const AdminProductEditPage = () => {
     gender: 'unisex'
   })
 
-  useEffect(() => {
-    loadData()
-  }, [id])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -66,7 +62,11 @@ const AdminProductEditPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id, isEditing])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target

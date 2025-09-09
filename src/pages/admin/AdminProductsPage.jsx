@@ -26,7 +26,7 @@ const AdminProductsPage = () => {
       setError(null)
       const data = await fetchProducts()
       setProducts(data)
-    } catch (error) {
+    } catch {
       setError('Ошибка загрузки товаров')
       toast.error('Ошибка загрузки товаров')
     } finally {
@@ -45,7 +45,7 @@ const AdminProductsPage = () => {
       await deleteProduct(id)
       toast.success('Товар удален')
       loadProducts()
-    } catch (error) {
+    } catch {
       toast.error('Ошибка удаления товара')
     }
   }

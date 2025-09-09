@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -32,11 +32,7 @@ const AdminStatsPage = () => {
     end: new Date().toISOString().split('T')[0]
   })
 
-  useEffect(() => {
-    loadStats()
-  }, [period, dateRange])
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setLoading(true)
       await Promise.all([
@@ -52,7 +48,11 @@ const AdminStatsPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [dateRange])
+
+  useEffect(() => {
+    loadStats()
+  }, [loadStats, period, dateRange])
 
   const loadGeneralStats = async () => {
     try {
@@ -418,7 +418,7 @@ const AdminStatsPage = () => {
           <h2 className="text-base lg:text-lg font-semibold mb-4">Продажи по дням</h2>
           {periodStats.length > 0 ? (
             <div className="space-y-2">
-              {periodStats.slice(-10).map((day, index) => (
+              {periodStats.slice(-10).map((day) => (
                 <div key={day.date} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                   <div className="text-xs lg:text-sm font-medium">
                     {new Date(day.date).toLocaleDateString('ru-RU')}

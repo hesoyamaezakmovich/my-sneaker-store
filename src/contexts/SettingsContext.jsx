@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 
 const SettingsContext = createContext({});
@@ -51,7 +51,7 @@ export const SettingsProvider = ({ children }) => {
             }
             
             settingsObj[setting.key] = value;
-          } catch (e) {
+          } catch {
             settingsObj[setting.key] = setting.value;
           }
         });

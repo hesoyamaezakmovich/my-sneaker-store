@@ -1,7 +1,7 @@
 import React, { forwardRef, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 
-const sizeStyles = {
+const SIZE_STYLES = {
   small: 'px-3 py-1.5 text-sm',
   medium: 'px-4 py-2 text-base',
   large: 'px-5 py-3 text-lg'

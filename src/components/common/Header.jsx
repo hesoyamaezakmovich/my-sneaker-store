@@ -10,7 +10,7 @@ import CartDrawer from '../cart/CartDrawer'
 
 const Header = () => {
   const navigate = useNavigate()
-  const { isAuthModalOpen, setIsAuthModalOpen } = useAuth() || {}
+  const { setIsAuthModalOpen } = useAuth() || {}
 
   const { data: user } = useUserQuery()
   const { data: favorites = [] } = useFavoritesQuery(user?.id)
@@ -24,11 +24,11 @@ const Header = () => {
     setIsCartOpen(false)
   }
 
-  const handleChangeQuantity = (item, newQuantity) => {
+  const handleChangeQuantity = () => {
     // Реализация через useUpdateCartQuantity в компоненте CartDrawer
   }
 
-  const handleRemove = (item) => {
+  const handleRemove = () => {
     // Реализация через useRemoveFromCart в компоненте CartDrawer
   }
 

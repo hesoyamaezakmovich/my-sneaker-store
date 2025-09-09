@@ -29,7 +29,7 @@ const AdminSupportPage = () => {
         userId: user.id
       })
       setMessage('')
-    } catch (error) {
+    } catch {
       toast.error('Ошибка отправки сообщения')
     }
   }
@@ -41,7 +41,7 @@ const AdminSupportPage = () => {
       if (selectedChatId === chatId) {
         setSelectedChatId(null)
       }
-    } catch (error) {
+    } catch {
       toast.error('Ошибка закрытия чата')
     }
   }

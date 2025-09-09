@@ -1,4 +1,4 @@
-import { format, formatDistance, formatRelative, parseISO } from 'date-fns'
+import { format, formatDistance, parseISO } from 'date-fns'
 import { ru } from 'date-fns/locale'
 
 // Форматирование даты

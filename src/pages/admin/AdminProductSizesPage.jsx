@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Plus, Save, Trash2, ArrowLeft } from 'lucide-react'
 import { fetchProductById } from '../../services/products.service'
@@ -14,11 +14,7 @@ const AdminProductSizesPage = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    loadData()
-  }, [id])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -48,7 +44,11 @@ const AdminProductSizesPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleAddSize = async () => {
     // Находим первый размер, который еще не добавлен

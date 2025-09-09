@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Search, Mail, Phone, MapPin, User, Shield, Ban, Eye } from 'lucide-react'
 import { supabase } from '../../services/supabase'
 import toast from 'react-hot-toast'
@@ -15,11 +15,7 @@ const AdminUsersPage = () => {
   const [sortField, setSortField] = useState('created_at')
   const [sortDirection, setSortDirection] = useState('desc')
 
-  useEffect(() => {
-    loadUsers()
-  }, [sortField, sortDirection])
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -68,7 +64,11 @@ const AdminUsersPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [sortField, sortDirection])
+
+  useEffect(() => {
+    loadUsers()
+  }, [loadUsers])
   
   const toggleAdminStatus = async (userId, currentIsAdmin) => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { 
   Save, 
   Settings as SettingsIcon,
@@ -16,7 +16,7 @@ import toast from 'react-hot-toast'
 import { useSettings } from '../../contexts/SettingsContext'
 
 const AdminSettingsPage = () => {
-  const { settings: globalSettings, updateSettings } = useSettings()
+  const { updateSettings } = useSettings()
   const [settings, setSettings] = useState({
     // Общие настройки магазина
     store_name: 'BRO\'S SHOP',
@@ -79,11 +79,7 @@ const AdminSettingsPage = () => {
     { id: 'security', label: 'Безопасность', icon: Shield }
   ]
 
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -143,7 +139,11 @@ const AdminSettingsPage = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [settings])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   const saveSettings = async () => {
     if (!validateSettings()) {

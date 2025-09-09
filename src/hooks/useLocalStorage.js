@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 export const useLocalStorage = (key, initialValue) => {
   // Функция для получения начального значения
-  const getInitialValue = () => {
+  const getInitialValue = useCallback(() => {
     try {
       const item = window.localStorage.getItem(key)
       return item ? JSON.parse(item) : initialValue
@@ -10,7 +10,7 @@ export const useLocalStorage = (key, initialValue) => {
       console.error(`Error reading localStorage key "${key}":`, error)
       return initialValue
     }
-  }
+  }, [key, initialValue])
 
   // State для хранения значения
   const [storedValue, setStoredValue] = useState(getInitialValue)
@@ -57,7 +57,7 @@ export const useLocalStorage = (key, initialValue) => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('local-storage', handleStorageChange)
     }
-  }, [key])
+  }, [key, getInitialValue])
 
   return [storedValue, setValue, removeValue]
 }

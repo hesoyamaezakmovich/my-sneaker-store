@@ -5,7 +5,6 @@ import { LogOut } from 'lucide-react'
 import { useUserQuery } from '../hooks/useUserQuery'
 import { useProfileQuery } from '../hooks/useProfileQuery'
 import { useUpdateProfile } from '../hooks/useAuthMutations'
-import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../services/supabase'
 import toast from 'react-hot-toast'
 import UserOrdersPreview from '../components/common/UserOrdersPreview'
@@ -13,7 +12,6 @@ import UserOrdersPreview from '../components/common/UserOrdersPreview'
 export default function ProfilePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { signOut } = useAuth()
   const { data: user, isLoading: userLoading } = useUserQuery()
   const { data: profile, isLoading: profileLoading } = useProfileQuery(user?.id)
   const updateProfileMutation = useUpdateProfile()

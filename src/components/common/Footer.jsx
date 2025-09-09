@@ -16,7 +16,7 @@ import { useSettings } from '../../contexts/SettingsContext'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
-  const { settings, loading } = useSettings()
+  const { settings } = useSettings()
 
   // fallback значения
   const storePhone = settings?.store_phone || '8 (800) 123-45-67'

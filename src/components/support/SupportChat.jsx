@@ -44,7 +44,7 @@ const SupportChat = () => {
         userId: user.id
       })
       setMessage('')
-    } catch (error) {
+    } catch {
       toast.error('Ошибка отправки сообщения')
     }
   }
