@@ -1,125 +1,82 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Facebook, 
-  Instagram, 
-  Twitter,
-  CreditCard,
-  Truck,
-  Shield,
-  RefreshCw
-} from 'lucide-react'
-import { useSettings } from '../../contexts/SettingsContext'
+import { Box, Mail, Download, Shield, Star } from 'lucide-react'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
-  const { settings } = useSettings()
-
-  // fallback значения
-  const storePhone = settings?.store_phone || '8 (800) 123-45-67'
-  const storeEmail = settings?.store_email || "info@bro's-shop.ru"
-  const storeAddress = settings?.store_address || 'Москва, ул. Примерная, 123'
 
   const footerLinks = {
     company: [
-      { name: 'О компании', path: '/about' },
-      { name: 'Вакансии', path: '/careers' },
+      { name: 'О платформе', path: '/about' },
+      { name: 'Контакты', path: '/contacts' },
       { name: 'Новости', path: '/news' },
-      { name: 'Контакты', path: '/contacts' }
     ],
     help: [
-      { name: 'Как заказать', path: '/how-to-order' },
-      { name: 'Доставка', path: '/delivery' },
-      { name: 'Возврат', path: '/returns' },
-      { name: 'Размерная таблица', path: '/size-guide' }
+      { name: 'Кабинет автора', path: '/author' },
+      { name: 'Мои заказы', path: '/orders' },
+      { name: 'Избранное', path: '/favorites' },
+      { name: 'Профиль', path: '/profile' },
     ],
     catalog: [
+      { name: 'Все модели', path: '/catalog' },
       { name: 'Новинки', path: '/catalog?sort=newest' },
-      { name: 'Мужская обувь', path: '/catalog?gender=male' },
-      { name: 'Женская обувь', path: '/catalog?gender=female' },
-      { name: 'Распродажа', path: '/catalog?sale=true' }
-    ]
+      { name: 'Популярные', path: '/catalog?sort=popular' },
+      { name: 'Бесплатные', path: '/catalog?isFree=true' },
+    ],
   }
 
   const features = [
-    { icon: Truck, text: 'Бесплатная доставка от 5000₽' },
-    { icon: RefreshCw, text: 'Возврат в течение 30 дней' },
-    { icon: Shield, text: 'Гарантия подлинности' },
-    { icon: CreditCard, text: 'Удобные способы оплаты' }
+    { icon: Download, text: 'Мгновенное скачивание' },
+    { icon: Shield, text: 'Лицензионная защита' },
+    { icon: Star, text: 'Проверенные авторы' },
+    { icon: Box, text: 'Форматы OBJ, FBX, STL и другие' },
   ]
 
   return (
-    <footer className="bg-gradient-to-b from-gray-100 to-gray-200 text-gray-800 mt-16 border-t border-gray-200">
+    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 text-gray-800 mt-16 border-t border-gray-200">
       {/* Преимущества */}
       <div className="max-w-7xl mx-auto py-10 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div key={index} className="flex items-center gap-4 bg-white rounded-2xl shadow p-5">
-              <feature.icon className="w-8 h-8 text-black/60" />
-              <span className="text-base font-medium text-gray-700">{feature.text}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((feature) => (
+            <div key={feature.text} className="flex items-center gap-4 bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
+              <feature.icon className="w-7 h-7 text-blue-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-700">{feature.text}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Основное содержимое */}
-      <div className="max-w-7xl mx-auto py-14 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
-          {/* О компании */}
-          <div className="lg:col-span-2 flex flex-col justify-between">
-            <Link to="/" className="flex items-center gap-3 mb-6 select-none">
-              <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white font-extrabold text-2xl tracking-tight">S</span>
+      <div className="max-w-7xl mx-auto py-12 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+          {/* О платформе */}
+          <div>
+            <Link to="/" className="flex items-center gap-3 mb-4 select-none">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow">
+                <Box className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-extrabold tracking-tight text-gray-900">
-                BRO'S <span className="text-black">SHOP</span>
-              </span>
+              <div>
+                <span className="text-lg font-extrabold text-gray-900">РКС</span>
+                <span className="text-xs text-gray-400 block leading-none">3D Маркетплейс</span>
+              </div>
             </Link>
-            <p className="text-gray-500 mb-8 text-base max-w-md">
-              Ваш надежный магазин оригинальных кроссовок. Только проверенные бренды и актуальные модели.
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Онлайн-площадка для покупки и продажи 3D-моделей от АРОО «РКС».
             </p>
-            {/* Социальные сети */}
-            <div className="flex gap-4 mt-2">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-white rounded-full shadow hover:bg-black hover:text-white transition-colors border border-gray-200"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-white rounded-full shadow hover:bg-black hover:text-white transition-colors border border-gray-200"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-white rounded-full shadow hover:bg-black hover:text-white transition-colors border border-gray-200"
-              >
-                <Twitter className="w-5 h-5" />
+            <div className="mt-4">
+              <a href="mailto:info@rks3d.ru" className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
+                <Mail className="w-4 h-4" />
+                info@rks3d.ru
               </a>
             </div>
           </div>
 
-          {/* Ссылки */}
+          {/* Компания */}
           <div>
-            <h3 className="font-semibold mb-5 text-lg">Компания</h3>
-            <ul className="space-y-3">
+            <h3 className="font-semibold mb-4 text-gray-900">Компания</h3>
+            <ul className="space-y-2.5">
               {footerLinks.company.map((link) => (
                 <li key={link.path}>
-                  <Link
-                    to={link.path}
-                    className="text-gray-500 hover:text-black transition-colors text-base"
-                  >
+                  <Link to={link.path} className="text-sm text-gray-500 hover:text-blue-600 transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -127,15 +84,13 @@ const Footer = () => {
             </ul>
           </div>
 
+          {/* Личный кабинет */}
           <div>
-            <h3 className="font-semibold mb-5 text-lg">Помощь</h3>
-            <ul className="space-y-3">
+            <h3 className="font-semibold mb-4 text-gray-900">Личный кабинет</h3>
+            <ul className="space-y-2.5">
               {footerLinks.help.map((link) => (
                 <li key={link.path}>
-                  <Link
-                    to={link.path}
-                    className="text-gray-500 hover:text-black transition-colors text-base"
-                  >
+                  <Link to={link.path} className="text-sm text-gray-500 hover:text-blue-600 transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -143,15 +98,13 @@ const Footer = () => {
             </ul>
           </div>
 
+          {/* Каталог */}
           <div>
-            <h3 className="font-semibold mb-5 text-lg">Каталог</h3>
-            <ul className="space-y-3">
+            <h3 className="font-semibold mb-4 text-gray-900">Каталог</h3>
+            <ul className="space-y-2.5">
               {footerLinks.catalog.map((link) => (
                 <li key={link.path}>
-                  <Link
-                    to={link.path}
-                    className="text-gray-500 hover:text-black transition-colors text-base"
-                  >
+                  <Link to={link.path} className="text-sm text-gray-500 hover:text-blue-600 transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -160,40 +113,16 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Контакты и копирайт */}
-        <div className="mt-16 pt-10 border-t border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-            <a
-              href={`tel:${storePhone.replace(/[^\d+]/g, '')}`}
-              className="flex items-center gap-3 text-gray-500 hover:text-black transition-colors text-base"
-            >
-              <Phone className="w-5 h-5" />
-              <span>{storePhone}</span>
-            </a>
-            <a
-              href={`mailto:${storeEmail}`}
-              className="flex items-center gap-3 text-gray-500 hover:text-black transition-colors text-base"
-            >
-              <Mail className="w-5 h-5" />
-              <span>{storeEmail}</span>
-            </a>
-            <div className="flex items-center gap-3 text-gray-500">
-              <MapPin className="w-5 h-5" />
-              <span>{storeAddress}</span>
-            </div>
-          </div>
-
-          {/* Копирайт */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
-            <p>© {currentYear} BRO'S SHOP. Все права защищены.</p>
-            <div className="flex gap-6">
-              <Link to="/privacy" className="hover:text-black transition-colors">
-                Политика конфиденциальности
-              </Link>
-              <Link to="/terms" className="hover:text-black transition-colors">
-                Условия использования
-              </Link>
-            </div>
+        {/* Копирайт */}
+        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+          <p>© {currentYear} АРОО «РКС» — 3D Маркетплейс. Все права защищены.</p>
+          <div className="flex gap-6">
+            <Link to="/privacy" className="hover:text-blue-600 transition-colors">
+              Политика конфиденциальности
+            </Link>
+            <Link to="/terms" className="hover:text-blue-600 transition-colors">
+              Условия использования
+            </Link>
           </div>
         </div>
       </div>

@@ -1,20 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../services/supabase'
+import { fetchCart } from '../services/cart.service'
+import { getAccessToken } from '../services/api'
 
-export const useCartQuery = (userId) => {
+export const useCartQuery = () => {
   return useQuery({
-    queryKey: ['cart', userId],
-    queryFn: async () => {
-      if (!userId) return []
-      const { data, error } = await supabase
-        .from('cart_items')
-        .select(`*, product:products(*, brand:brands(*), category:categories(*), images:product_images(*)), size:sizes(*)`)
-        .eq('user_id', userId)
-      if (error) throw error
-      return data || []
-    },
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    queryKey: ['cart'],
+    queryFn: fetchCart,
+    enabled: !!getAccessToken(),
+    staleTime: 2 * 60 * 1000,
     retry: 1,
   })
 }

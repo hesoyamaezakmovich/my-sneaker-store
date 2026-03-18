@@ -1,81 +1,42 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supportService } from '../services/support.service'
-import { useEffect } from 'react'
 
-export const useSupportChat = (userId) => {
+export const useSupportChat = (enabled = true) => {
   return useQuery({
-    queryKey: ['supportChat', userId],
-    queryFn: () => supportService.getUserChat(userId),
-    enabled: !!userId
+    queryKey: ['supportChat'],
+    queryFn: () => supportService.getUserChat(),
+    enabled,
   })
 }
 
 export const useChatMessages = (chatId) => {
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
+  return useQuery({
     queryKey: ['supportMessages', chatId],
     queryFn: () => supportService.getChatMessages(chatId),
     enabled: !!chatId,
-    refetchInterval: 5000 // Обновляем каждые 5 секунд
+    refetchInterval: 5000,
   })
-
-  useEffect(() => {
-    if (!chatId) return
-
-    const subscription = supportService.subscribeToMessages(chatId, (payload) => {
-      queryClient.setQueryData(['supportMessages', chatId], (oldData) => {
-        if (!oldData) return [payload.new]
-        return [...oldData, payload.new]
-      })
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [chatId, queryClient])
-
-  return query
 }
 
 export const useSendMessage = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ chatId, message, isAdmin, userId }) =>
-      supportService.sendMessage(chatId, message, isAdmin, userId),
+    mutationFn: ({ chatId, message }) =>
+      supportService.sendMessage(chatId, message),
     onSuccess: (data) => {
-      // Обновляем список сообщений
-      queryClient.setQueryData(['supportMessages', data.chat_id], (oldData) => {
-        if (!oldData) return [data]
-        return [...oldData, data]
-      })
-      // Обновляем список чатов для админа
+      queryClient.invalidateQueries(['supportMessages', data?.chat_id])
       queryClient.invalidateQueries(['supportChats'])
-    }
+    },
   })
 }
 
 export const useAllChats = () => {
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
+  return useQuery({
     queryKey: ['supportChats'],
     queryFn: () => supportService.getAllChats(),
-    refetchInterval: 10000 // Обновляем каждые 10 секунд
+    refetchInterval: 10000,
   })
-
-  useEffect(() => {
-    const subscription = supportService.subscribeToChats(() => {
-      queryClient.invalidateQueries(['supportChats'])
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [queryClient])
-
-  return query
 }
 
 export const useCloseChat = () => {
@@ -85,6 +46,6 @@ export const useCloseChat = () => {
     mutationFn: (chatId) => supportService.closeChat(chatId),
     onSuccess: () => {
       queryClient.invalidateQueries(['supportChats'])
-    }
+    },
   })
 }

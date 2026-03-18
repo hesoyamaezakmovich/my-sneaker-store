@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShoppingCart, Heart, User } from 'lucide-react'
+import { ShoppingCart, Heart, User, Box } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useUserQuery } from '../../hooks/useUserQuery'
 import { useFavoritesQuery } from '../../hooks/useFavoritesQuery'
@@ -13,9 +13,9 @@ const Header = () => {
   const { setIsAuthModalOpen } = useAuth() || {}
 
   const { data: user } = useUserQuery()
-  const { data: favorites = [] } = useFavoritesQuery(user?.id)
-  const { data: cartItems = [] } = useCartQuery(user?.id)
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
+  const { data: favorites = [] } = useFavoritesQuery()
+  const { data: cartItems = [] } = useCartQuery()
+  const totalItems = cartItems.length
 
   const [isCartOpen, setIsCartOpen] = React.useState(false)
 
@@ -24,65 +24,78 @@ const Header = () => {
     setIsCartOpen(false)
   }
 
-  const handleChangeQuantity = () => {
-    // Реализация через useUpdateCartQuantity в компоненте CartDrawer
-  }
-
-  const handleRemove = () => {
-    // Реализация через useRemoveFromCart в компоненте CartDrawer
-  }
-
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl shadow-lg border-b border-gray-100">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           {/* Логотип */}
           <div
-            className="flex items-center gap-2 cursor-pointer select-none"
+            className="flex items-center gap-3 cursor-pointer select-none"
             onClick={() => navigate('/')}
           >
-            <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white font-extrabold text-2xl tracking-tight">S</span>
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
+              <Box className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-extrabold tracking-tight text-gray-900 hidden sm:block">
-              BRO'S <span className="text-black">SHOP</span>
-            </span>
+            <div className="hidden sm:block">
+              <span className="text-xl font-extrabold tracking-tight text-gray-900">РКС</span>
+              <span className="text-xs text-gray-400 block leading-none">3D Маркетплейс</span>
+            </div>
           </div>
-          {/* Навигация и действия */}
-          <nav className="flex items-center gap-8">
-            <div className="relative cursor-pointer group" onClick={() => navigate('/favorites')}>
-              <Heart className="w-7 h-7 text-gray-700 group-hover:text-red-500 transition" />
-              {favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 shadow-lg border-2 border-white">
-                  {favorites.length}
-                </span>
-              )}
-            </div>
-            <div className="relative cursor-pointer group" onClick={() => {
-              setIsCartOpen(true)
-            }}>
-              <ShoppingCart className="w-7 h-7 text-gray-700 group-hover:text-black transition" />
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full px-1.5 shadow-lg border-2 border-white">
-                  {totalItems}
-                </span>
-              )}
-            </div>
-            <button
-              className="flex items-center gap-2 text-gray-700 hover:text-black transition font-semibold px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 shadow-sm"
-              onClick={() => user ? navigate('/profile') : setIsAuthModalOpen(true)}
-            >
-              <User className="w-6 h-6" />
-              <span className="hidden sm:block">{user ? 'Профиль' : 'Войти'}</span>
+
+          {/* Навигация */}
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+            <button onClick={() => navigate('/catalog')} className="hover:text-blue-600 transition-colors">
+              Каталог
+            </button>
+            <button onClick={() => navigate('/author')} className="hover:text-blue-600 transition-colors">
+              Кабинет автора
+            </button>
+            <button onClick={() => navigate('/about')} className="hover:text-blue-600 transition-colors">
+              О нас
             </button>
           </nav>
+
+          {/* Иконки действий */}
+          <div className="flex items-center gap-3">
+            <button
+              className="relative p-2 text-gray-600 hover:text-red-500 transition-colors"
+              onClick={() => navigate('/favorites')}
+              aria-label="Избранное"
+            >
+              <Heart className="w-6 h-6" />
+              {favorites.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                  {favorites.length > 9 ? '9+' : favorites.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors"
+              onClick={() => setIsCartOpen(true)}
+              aria-label="Корзина"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                  {totalItems > 9 ? '9+' : totalItems}
+                </span>
+              )}
+            </button>
+
+            <button
+              className="flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-colors font-semibold px-4 py-2 rounded-full bg-gray-100 hover:bg-blue-50 text-sm"
+              onClick={() => user ? navigate('/profile') : setIsAuthModalOpen(true)}
+            >
+              <User className="w-5 h-5" />
+              <span className="hidden sm:block">{user ? 'Профиль' : 'Войти'}</span>
+            </button>
+          </div>
         </div>
       </header>
       <AuthModal />
-      <CartDrawer 
+      <CartDrawer
         cartItems={cartItems}
-        onChangeQuantity={handleChangeQuantity}
-        onRemove={handleRemove}
         onCheckout={handleCheckout}
         open={isCartOpen}
         onClose={() => setIsCartOpen(false)}

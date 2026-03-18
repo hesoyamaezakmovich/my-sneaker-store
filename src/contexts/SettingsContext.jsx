@@ -1,111 +1,57 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase } from '../services/supabase';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import api from '../services/api'
 
-const SettingsContext = createContext({});
+const SettingsContext = createContext({})
 
 const defaultSettings = {
-  // Внешний вид
-  primary_color: '#000000',
+  primary_color: '#2563eb',
   secondary_color: '#ffffff',
   accent_color: '#3b82f6',
+  site_name: 'РКС 3D Маркетплейс',
+  site_description: 'Маркетплейс 3D-моделей АРОО «РКС»',
   show_brand_logos: true,
-  show_size_guide: true,
-  
-  // Общие настройки
-  store_name: 'BRO\'S SHOP',
-  store_description: 'Магазин оригинальных кроссовок',
-  min_order_amount: 0,
-  free_shipping_amount: 5000,
-  
-  // Платежи
-  payment_methods: {
-    cash: true,
-    card: true,
-    online: true
-  }
+  commission_rate: '15',
+  max_file_size_mb: '500',
+  download_link_ttl_hours: '72',
 }
 
 export const SettingsProvider = ({ children }) => {
-  const [settings, setSettings] = useState(defaultSettings);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [settings, setSettings] = useState(defaultSettings)
+  const [loading, setLoading] = useState(true)
 
   const fetchSettings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
     try {
-      const { data, error } = await supabase.from('settings').select('*');
-      if (error) throw error;
-      const settingsObj = {};
-      if (data && data.length > 0) {
-        data.forEach(setting => {
-          try {
-            let value = setting.value
-            
-            if (setting.value_type === 'json') {
-              value = JSON.parse(setting.value)
-            } else if (setting.value_type === 'number') {
-              value = parseFloat(setting.value) || 0
-            } else if (setting.value_type === 'boolean') {
-              value = setting.value === 'true'
-            }
-            
-            settingsObj[setting.key] = value;
-          } catch {
-            settingsObj[setting.key] = setting.value;
-          }
-        });
+      const { data } = await api.get('/admin/settings')
+      if (data.settings) {
+        setSettings({ ...defaultSettings, ...data.settings })
       }
-      const finalSettings = { ...defaultSettings, ...settingsObj }
-      setSettings(finalSettings);
-    } catch (err) {
-      setError(err.message || 'Ошибка загрузки настроек');
+    } catch {
+      // Используем настройки по умолчанию при ошибке
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
-
-  const updateSettings = useCallback((newSettings) => {
-    const updatedSettings = { ...settings, ...newSettings }
-    setSettings(updatedSettings)
-  }, [settings])
+  }, [])
 
   const applyCSSVariables = useCallback(() => {
-    if (settings) {
-      const root = document.documentElement
-      root.style.setProperty('--primary-color', settings.primary_color || '#000000')
-      root.style.setProperty('--secondary-color', settings.secondary_color || '#ffffff')
-      root.style.setProperty('--accent-color', settings.accent_color || '#3b82f6')
-    }
+    const root = document.documentElement
+    root.style.setProperty('--primary-color', settings.primary_color || '#2563eb')
+    root.style.setProperty('--secondary-color', settings.secondary_color || '#ffffff')
+    root.style.setProperty('--accent-color', settings.accent_color || '#3b82f6')
   }, [settings])
 
-  useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
-
-  useEffect(() => {
-    applyCSSVariables();
-  }, [applyCSSVariables]);
-
-  const value = {
-    settings,
-    loading,
-    error,
-    refetch: fetchSettings,
-    updateSettings,
-  };
+  useEffect(() => { fetchSettings() }, [fetchSettings])
+  useEffect(() => { applyCSSVariables() }, [applyCSSVariables])
 
   return (
-    <SettingsContext.Provider value={value}>
+    <SettingsContext.Provider value={{ settings, loading, refetch: fetchSettings, updateSettings: (s) => setSettings(prev => ({ ...prev, ...s })) }}>
       {children}
     </SettingsContext.Provider>
-  );
-};
+  )
+}
 
 export const useSettings = () => {
-  const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error('useSettings должен использоваться внутри SettingsProvider');
-  }
-  return context;
-}; 
+  const context = useContext(SettingsContext)
+  if (!context) throw new Error('useSettings must be used within SettingsProvider')
+  return context
+}

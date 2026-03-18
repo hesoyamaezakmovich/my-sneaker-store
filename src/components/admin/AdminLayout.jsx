@@ -1,16 +1,17 @@
 import React from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  BarChart3, 
+import {
+  Package,
+  ShoppingCart,
+  Users,
+  BarChart3,
   Settings,
   Home,
   LogOut,
   Tags,
-  Truck,
-  MessageCircle
+  MessageCircle,
+  ShieldCheck,
+  Box
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -20,11 +21,11 @@ const AdminLayout = () => {
 
   const navigation = [
     { name: 'Главная', href: '/admin', icon: Home },
-    { name: 'Товары', href: '/admin/products', icon: Package },
+    { name: '3D-Модели', href: '/admin/models', icon: Box },
+    { name: 'Модерация', href: '/admin/moderation', icon: ShieldCheck },
     { name: 'Заказы', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Пользователи', href: '/admin/users', icon: Users },
     { name: 'Категории', href: '/admin/categories', icon: Tags },
-    { name: 'Доставка', href: '/admin/delivery', icon: Truck },
     { name: 'Поддержка', href: '/admin/support', icon: MessageCircle },
     { name: 'Статистика', href: '/admin/stats', icon: BarChart3 },
     { name: 'Настройки', href: '/admin/settings', icon: Settings },
@@ -36,7 +37,8 @@ const AdminLayout = () => {
   }
 
   const isActive = (path) => {
-    return location.pathname === path
+    if (path === '/admin') return location.pathname === path
+    return location.pathname.startsWith(path)
   }
 
   return (
@@ -50,7 +52,7 @@ const AdminLayout = () => {
               <h1 className="text-2xl font-bold">
                 Admin Panel
               </h1>
-              <p className="text-sm text-gray-500 mt-1">BRO'S SHOP</p>
+              <p className="text-sm text-gray-500 mt-1">РКС 3D Маркетплейс</p>
             </div>
 
             {/* Navigation */}

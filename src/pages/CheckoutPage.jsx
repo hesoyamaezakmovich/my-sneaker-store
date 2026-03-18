@@ -1,107 +1,177 @@
-import React, { useState, useEffect } from 'react'
-import { fetchCart, clearCart } from '../services/cart.service'
+import React, { useState } from 'react'
+import { useCartQuery } from '../hooks/useCartQuery'
+import { useClearCart } from '../hooks/useCartMutations'
 import { createOrder } from '../services/orders.service'
-import CartItem from '../components/cart/CartItem'
 import { useUserQuery } from '../hooks/useUserQuery'
+import { useNavigate } from 'react-router-dom'
+import { Package, Download, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { generateOrderNumber } from '../utils/helpers'
 
 export default function CheckoutPage() {
+  const navigate = useNavigate()
   const { data: user, isLoading: authLoading } = useUserQuery()
-  const [cartItems, setCartItems] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [form, setForm] = useState({
-    phone: '',
-    email: '',
-    shipping_address: '',
-    shipping_city: '',
-    shipping_postal_code: '',
-    notes: '',
-  })
+  const { data: cartItems = [], isLoading: cartLoading } = useCartQuery()
+  const clearCartMutation = useClearCart()
+  const [notes, setNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [ordered, setOrdered] = useState(false)
 
-  useEffect(() => {
-    if (!user) {
-      setCartItems([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    setError(null)
-    fetchCart(user.id)
-      .then(setCartItems)
-      .catch(() => setError('Ошибка загрузки корзины'))
-      .finally(() => setLoading(false))
-  }, [user])
-
-  const handleChange = e => {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-  }
+  const total = cartItems.reduce((sum, item) => sum + Number(item.price || 0), 0)
+  const freeItems = cartItems.filter(item => item.is_free)
+  const paidItems = cartItems.filter(item => !item.is_free)
 
   const handleSubmit = async e => {
     e.preventDefault()
     if (cartItems.length === 0) return toast.error('Корзина пуста!')
-    if (!user) return
-    setError(null)
+    setSubmitting(true)
     try {
-      const order = {
-        user_id: user.id,
-        order_number: generateOrderNumber(),
-        total_amount: cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0),
-        status: 'pending',
-        phone: form.phone,
-        email: form.email,
-        shipping_address: form.shipping_address,
-        shipping_city: form.shipping_city,
-        shipping_postal_code: form.shipping_postal_code,
-        notes: form.notes,
-      }
-      await createOrder(order, cartItems)
-      await clearCart(user.id)
-      setCartItems([])
+      await createOrder({ notes })
+      await clearCartMutation.mutateAsync()
+      setOrdered(true)
       toast.success('Заказ успешно оформлен!')
-    } catch {
-      setError('Ошибка оформления заказа')
-      toast.error('Ошибка оформления заказа')
+    } catch (err) {
+      toast.error(err.message || 'Ошибка оформления заказа')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  if (authLoading) return <div className="max-w-3xl mx-auto px-4 py-8">Загрузка...</div>
-  if (!user) return (
-    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col items-center justify-center text-gray-400">
-      <div className="text-xl mb-2">Войдите, чтобы оформить заказ</div>
-      <button className="mt-4 bg-black text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-800 transition" onClick={() => window.location.href = '/'}>На главную</button>
-    </div>
-  )
+  if (authLoading || cartLoading) {
+    return <div className="max-w-3xl mx-auto px-4 py-8 text-gray-500">Загрузка...</div>
+  }
 
-  if (loading) return <div className="max-w-3xl mx-auto px-4 py-8">Загрузка...</div>
+  if (!user) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col items-center justify-center text-gray-400">
+        <div className="text-xl mb-2">Войдите, чтобы оформить заказ</div>
+        <button
+          className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+          onClick={() => navigate('/')}
+        >
+          На главную
+        </button>
+      </div>
+    )
+  }
+
+  if (ordered) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center text-center">
+        <ShieldCheck className="w-20 h-20 text-green-500 mb-6" />
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">Заказ оформлен!</h1>
+        <p className="text-gray-500 mb-8">
+          {paidItems.length > 0
+            ? 'После подтверждения оплаты ссылки для скачивания появятся в разделе «Мои заказы».'
+            : 'Ссылки для скачивания доступны в разделе «Мои заказы».'}
+        </p>
+        <div className="flex gap-4">
+          <button
+            className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+            onClick={() => navigate('/orders')}
+          >
+            Мои заказы
+          </button>
+          <button
+            className="border border-gray-300 text-gray-700 px-6 py-2 rounded-full font-semibold hover:bg-gray-50 transition"
+            onClick={() => navigate('/catalog')}
+          >
+            В каталог
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Оформление заказа</h1>
-      <form className="bg-white rounded-xl shadow p-6 mb-8" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input name="phone" value={form.phone} onChange={handleChange} required placeholder="Телефон" className="input" />
-          <input name="email" value={form.email} onChange={handleChange} required placeholder="Email" className="input" />
-          <input name="shipping_address" value={form.shipping_address} onChange={handleChange} required placeholder="Адрес" className="input col-span-2" />
-          <input name="shipping_city" value={form.shipping_city} onChange={handleChange} required placeholder="Город" className="input" />
-          <input name="shipping_postal_code" value={form.shipping_postal_code} onChange={handleChange} required placeholder="Индекс" className="input" />
+      <h1 className="text-2xl font-bold mb-6 text-gray-900">Оформление заказа</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Форма */}
+        <div>
+          <form className="bg-white rounded-xl shadow-sm border p-6 space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Комментарий (необязательно)</label>
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Примечание к заказу..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                rows={3}
+              />
+            </div>
+
+            {/* Информация о доставке */}
+            <div className="bg-blue-50 rounded-lg p-4 space-y-2 text-sm text-blue-800">
+              <div className="flex items-center gap-2 font-semibold">
+                <Download className="w-4 h-4" />
+                Цифровая доставка
+              </div>
+              <ul className="list-disc list-inside space-y-1 text-blue-700">
+                <li>Бесплатные модели доступны сразу</li>
+                <li>Платные модели — после подтверждения оплаты</li>
+                <li>Ссылки действуют 72 часа</li>
+                <li>Лицензия генерируется автоматически</li>
+              </ul>
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting || cartItems.length === 0}
+              className="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold text-base hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {submitting ? 'Оформление...' : 'Оформить заказ'}
+            </button>
+          </form>
         </div>
-        <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Комментарий к заказу" className="input w-full mb-4" rows={2} />
-        {error && <div className="text-red-500 mb-4">{error}</div>}
-        <button type="submit" className="w-full bg-black text-white rounded py-3 font-semibold text-lg hover:bg-gray-800 transition">
-          Оформить заказ
-        </button>
-      </form>
-      <div className="bg-white rounded-xl shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">Ваш заказ</h2>
-        {cartItems.length === 0 ? (
-          <div className="text-gray-500 text-center">Корзина пуста</div>
-        ) : (
-          cartItems.map(item => (
-            <CartItem key={item.id} cartItem={item} onChangeQuantity={() => {}} onRemove={() => {}} />
-          ))
-        )}
+
+        {/* Состав заказа */}
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">Состав заказа</h2>
+
+          {cartItems.length === 0 ? (
+            <div className="text-gray-400 text-center py-8">Корзина пуста</div>
+          ) : (
+            <div className="space-y-3">
+              {cartItems.map(item => (
+                <div key={item.model_id} className="flex items-center gap-3">
+                  {item.preview_image_url ? (
+                    <img src={item.preview_image_url} alt={item.title} className="w-12 h-12 rounded object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <Package className="w-6 h-6 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">{item.title}</div>
+                    <div className="text-xs text-gray-500">{item.author_name || 'Автор'}</div>
+                  </div>
+                  <div className="text-sm font-semibold text-gray-900 flex-shrink-0">
+                    {item.is_free ? (
+                      <span className="text-green-600">Бесплатно</span>
+                    ) : (
+                      `${Number(item.price).toLocaleString()} ₽`
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              <div className="border-t pt-3 mt-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-gray-900">Итого</span>
+                  <span className="text-xl font-bold text-gray-900">
+                    {total > 0 ? `${total.toLocaleString()} ₽` : 'Бесплатно'}
+                  </span>
+                </div>
+                {freeItems.length > 0 && paidItems.length > 0 && (
+                  <div className="text-xs text-gray-400 mt-1">
+                    {freeItems.length} бесплатн. + {paidItems.length} платн.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

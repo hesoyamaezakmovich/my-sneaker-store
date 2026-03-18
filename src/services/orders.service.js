@@ -1,53 +1,41 @@
-import { supabase, handleSupabaseError } from './supabase'
+import api, { handleApiError } from './api'
 
-// Создать заказ и позиции заказа
-export const createOrder = async (order, items) => {
-  // order: { user_id, order_number, total_amount, ... }
-  // items: [{ product_id, size_id, quantity, price, ... }]
-  const { data: orderData, error: orderError } = await supabase
-    .from('orders')
-    .insert([order])
-    .select()
-    .single()
-  if (orderError) throw new Error(handleSupabaseError(orderError))
-
-  // Добавляем позиции заказа
-  const orderItems = items.map(item => ({
-    order_id: orderData.id,
-    product_id: item.product_id,
-    size_id: item.size_id,
-    quantity: item.quantity,
-    price: item.product?.price || 0,
-    product_name: item.product?.name || '',
-    product_image: item.product?.image_url || '',
-    size_value: item.size?.size_value || ''
-  }))
-  const { error: itemsError } = await supabase
-    .from('order_items')
-    .insert(orderItems)
-  if (itemsError) throw new Error(handleSupabaseError(itemsError))
-
-  return orderData
+// Создать заказ из текущей корзины
+export const createOrder = async ({ notes } = {}) => {
+  try {
+    const { data } = await api.post('/orders', { notes })
+    return data.order
+  } catch (error) {
+    throw new Error(handleApiError(error))
+  }
 }
 
-// Получить заказы пользователя с деталями
-export const fetchOrdersByUser = async (userId) => {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*, items:order_items(*, product:products(*), size:sizes(*))')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-  if (error) throw new Error(handleSupabaseError(error))
-  return data
+// Получить заказы текущего пользователя
+export const fetchOrders = async () => {
+  try {
+    const { data } = await api.get('/orders')
+    return data.orders
+  } catch (error) {
+    throw new Error(handleApiError(error))
+  }
 }
 
-// Получить заказ по id с деталями
+// Получить заказ по id
 export const fetchOrderById = async (orderId) => {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*, items:order_items(*, product:products(*), size:sizes(*))')
-    .eq('id', orderId)
-    .single()
-  if (error) throw new Error(handleSupabaseError(error))
-  return data
+  try {
+    const { data } = await api.get(`/orders/${orderId}`)
+    return data.order
+  } catch (error) {
+    throw new Error(handleApiError(error))
+  }
+}
+
+// Получить ссылки для скачивания по лицензии
+export const fetchDownloadLinks = async (licenseId) => {
+  try {
+    const { data } = await api.get(`/orders/downloads/${licenseId}`)
+    return data.files
+  } catch (error) {
+    throw new Error(handleApiError(error))
+  }
 }

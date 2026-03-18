@@ -1,88 +1,44 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../services/supabase'
 import toast from 'react-hot-toast'
+import { addToCart, removeFromCart, clearCart } from '../services/cart.service'
 
-export const useAddToCart = (userId) => {
+export const useAddToCart = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ productId, sizeId, quantity }) => {
-      const { data, error } = await supabase
-        .from('cart_items')
-        .insert({ user_id: userId, product_id: productId, size_id: sizeId, quantity })
-        .select(`*, product:products(*, brand:brands(*), category:categories(*), images:product_images(*)), size:sizes(*)`)
-        .single()
-      if (error) throw error
-      return data
-    },
+    mutationFn: async (modelId) => addToCart(modelId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId] })
-      toast.success('Товар добавлен в корзину')
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+      toast.success('Модель добавлена в корзину')
     },
     onError: (e) => {
       toast.error(e.message || 'Ошибка добавления в корзину')
-    }
+    },
   })
 }
 
-export const useUpdateCartQuantity = (userId) => {
+export const useRemoveFromCart = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ itemId, quantity }) => {
-      const { error } = await supabase
-        .from('cart_items')
-        .update({ quantity })
-        .eq('id', itemId)
-        .eq('user_id', userId)
-      if (error) throw error
-      return { itemId, quantity }
-    },
+    mutationFn: async (modelId) => removeFromCart(modelId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId] })
-    },
-    onError: (e) => {
-      toast.error(e.message || 'Ошибка обновления количества')
-    }
-  })
-}
-
-export const useRemoveFromCart = (userId) => {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (itemId) => {
-      const { error } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('id', itemId)
-        .eq('user_id', userId)
-      if (error) throw error
-      return itemId
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId] })
-      toast.success('Товар удален из корзины')
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+      toast.success('Модель удалена из корзины')
     },
     onError: (e) => {
       toast.error(e.message || 'Ошибка удаления из корзины')
-    }
+    },
   })
 }
 
-export const useClearCart = (userId) => {
+export const useClearCart = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('user_id', userId)
-      if (error) throw error
-    },
+    mutationFn: clearCart,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId] })
-      toast.success('Корзина очищена')
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
     onError: (e) => {
       toast.error(e.message || 'Ошибка очистки корзины')
-    }
+    },
   })
 }

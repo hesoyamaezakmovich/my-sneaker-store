@@ -14,7 +14,7 @@ const SupportChat = () => {
   const { setIsAuthModalOpen } = useAuth()
   const { data: user } = useUserQuery()
   
-  const { data: chat } = useSupportChat(user?.id)
+  const { data: chat } = useSupportChat(!!user)
   const { data: messages = [], isLoading } = useChatMessages(chat?.id)
   const sendMessageMutation = useSendMessage()
 
@@ -40,8 +40,6 @@ const SupportChat = () => {
       await sendMessageMutation.mutateAsync({
         chatId: chat.id,
         message: message.trim(),
-        isAdmin: false,
-        userId: user.id
       })
       setMessage('')
     } catch {

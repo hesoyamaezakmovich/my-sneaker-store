@@ -1,169 +1,69 @@
-import { supabase } from './supabase'
+import api, { handleApiError } from './api'
 
 export const supportService = {
-  // Создать новый чат поддержки
-  async createSupportChat(userId) {
-    const { data, error } = await supabase
-      .from('support_chats')
-      .insert([
-        {
-          user_id: userId,
-          status: 'open',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ])
-      .select('*')
-      .single()
-
-    if (error) throw error
-    return data
-  },
-
-  // Получить чат пользователя (создать если нет)
-  async getUserChat(userId) {
-    // Сначала попробуем найти открытый чат
-    let { data: existingChat, error } = await supabase
-      .from('support_chats')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'open')
-      .single()
-
-    if (error && error.code !== 'PGRST116') {
-      throw error
+  async getUserChat() {
+    try {
+      const { data } = await api.post('/support/chat')
+      return data.chat
+    } catch (error) {
+      throw new Error(handleApiError(error))
     }
-
-    // Если нет открытого чата, создаем новый
-    if (!existingChat) {
-      existingChat = await this.createSupportChat(userId)
-    }
-
-    return existingChat
   },
 
-  // Получить все чаты для админа
-  async getAllChats() {
-    const { data: chats, error } = await supabase
-      .from('support_chats')
-      .select('*')
-      .order('updated_at', { ascending: false })
-
-    if (error) throw error
-    
-    // Получаем данные пользователей и сообщения отдельно для каждого чата
-    const chatsWithDetails = await Promise.all(
-      chats.map(async (chat) => {
-        // Получаем профиль пользователя
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name, email')
-          .eq('id', chat.user_id)
-          .single()
-        
-        // Получаем сообщения чата
-        const { data: messages } = await supabase
-          .from('support_messages')
-          .select('id, message, created_at, is_admin')
-          .eq('chat_id', chat.id)
-          .order('created_at', { ascending: true })
-        
-        return {
-          ...chat,
-          user: profile,
-          messages: messages || []
-        }
-      })
-    )
-
-    return chatsWithDetails
-  },
-
-  // Получить сообщения чата
   async getChatMessages(chatId) {
-    const { data, error } = await supabase
-      .from('support_messages')
-      .select('*')
-      .eq('chat_id', chatId)
-      .order('created_at', { ascending: true })
-
-    if (error) throw error
-    return data
+    try {
+      const { data } = await api.get(`/support/chat/${chatId}/messages`)
+      return data.messages
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
   },
 
-  // Отправить сообщение
-  async sendMessage(chatId, message, isAdmin = false, userId = null) {
-    const { data, error } = await supabase
-      .from('support_messages')
-      .insert([
-        {
-          chat_id: chatId,
-          message: message.trim(),
-          is_admin: isAdmin,
-          user_id: userId,
-          created_at: new Date().toISOString()
-        }
-      ])
-      .select('*')
-      .single()
-
-    if (error) throw error
-
-    // Обновляем время последнего обновления чата
-    await supabase
-      .from('support_chats')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', chatId)
-
-    return data
+  async sendMessage(chatId, message) {
+    try {
+      const { data } = await api.post(`/support/chat/${chatId}/messages`, { message })
+      return data.message
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
   },
 
-  // Закрыть чат
+  async getAllChats() {
+    try {
+      const { data } = await api.get('/support/chats')
+      return data.chats
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
+  },
+
   async closeChat(chatId) {
-    const { data, error } = await supabase
-      .from('support_chats')
-      .update({ 
-        status: 'closed',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', chatId)
-      .select('*')
-      .single()
-
-    if (error) throw error
-    return data
+    try {
+      const { data } = await api.patch(`/support/chat/${chatId}`, { status: 'closed' })
+      return data.chat
+    } catch (error) {
+      throw new Error(handleApiError(error))
+    }
   },
 
-  // Подписка на новые сообщения
-  subscribeToMessages(chatId, callback) {
-    return supabase
-      .channel(`support_messages_${chatId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'support_messages',
-          filter: `chat_id=eq.${chatId}`
-        },
-        callback
-      )
-      .subscribe()
+  // Polling-based замена real-time подписки
+  subscribeToMessages(chatId, callback, intervalMs = 5000) {
+    const interval = setInterval(async () => {
+      try {
+        const messages = await this.getChatMessages(chatId)
+        callback(messages)
+      } catch {}
+    }, intervalMs)
+    return { unsubscribe: () => clearInterval(interval) }
   },
 
-  // Подписка на изменения чатов (для админа)
-  subscribeToChats(callback) {
-    return supabase
-      .channel('support_chats')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'support_chats'
-        },
-        callback
-      )
-      .subscribe()
-  }
+  subscribeToChats(callback, intervalMs = 10000) {
+    const interval = setInterval(async () => {
+      try {
+        const chats = await this.getAllChats()
+        callback(chats)
+      } catch {}
+    }, intervalMs)
+    return { unsubscribe: () => clearInterval(interval) }
+  },
 }

@@ -25,8 +25,6 @@ const AdminSupportPage = () => {
       await sendMessageMutation.mutateAsync({
         chatId: selectedChatId,
         message: message.trim(),
-        isAdmin: true,
-        userId: user.id
       })
       setMessage('')
     } catch {

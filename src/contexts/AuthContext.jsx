@@ -1,41 +1,55 @@
-import React, { createContext, useState } from 'react'
-import { supabase } from '../services/supabase'
+import React, { createContext, useState, useCallback } from 'react'
+import api, { setAuthTokens, clearAuthTokens, getRefreshToken } from '../services/api'
 
 export const AuthContext = createContext({})
 
 export const AuthProvider = ({ children }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
 
-  const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ 
-      email, 
-      password 
-    })
-    return { data, error }
-  }
+  const signIn = useCallback(async (email, password) => {
+    try {
+      const { data } = await api.post('/auth/login', { email, password })
+      setAuthTokens(data.accessToken, data.refreshToken)
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error: { message: error.response?.data?.error || error.message } }
+    }
+  }, [])
 
-  const signUp = async (email, password, additionalData = {}) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { 
-        data: additionalData 
-      }
-    })
-    return { data, error }
-  }
+  const signUp = useCallback(async (email, password, additionalData = {}) => {
+    try {
+      const { data } = await api.post('/auth/register', {
+        email,
+        password,
+        firstName: additionalData.first_name || additionalData.firstName,
+        lastName: additionalData.last_name || additionalData.lastName,
+        role: additionalData.role || 'buyer',
+      })
+      setAuthTokens(data.accessToken, data.refreshToken)
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error: { message: error.response?.data?.error || error.message } }
+    }
+  }, [])
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
-  }
+  const signOut = useCallback(async () => {
+    try {
+      const refreshToken = getRefreshToken()
+      await api.post('/auth/logout', { refreshToken })
+    } catch {
+      // ignore
+    } finally {
+      clearAuthTokens()
+    }
+    return { error: null }
+  }, [])
 
   const value = {
     isAuthModalOpen,
     setIsAuthModalOpen,
     signIn,
     signUp,
-    signOut
+    signOut,
   }
 
   return (
