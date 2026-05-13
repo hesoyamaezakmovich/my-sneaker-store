@@ -1,0 +1,26 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: 213.171.31.21
+          username: user1
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/user1/marketplace
+            git pull origin main
+            cd server
+            npm install
+            pm2 restart rks-api
+            cd ..
+            npm install
+            npm run build
+            sudo chmod -R 755 /home/user1/marketplace/dist
