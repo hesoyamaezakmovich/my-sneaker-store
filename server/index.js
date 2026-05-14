@@ -24,8 +24,8 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: true }))
 
-// Статические файлы загрузок (dev)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+// Статические файлы загрузок
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')))
 
 // Маршруты API
 app.use('/api/auth', authRouter)

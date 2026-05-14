@@ -32,7 +32,7 @@ router.post('/image', authenticate, requireRole('admin'), upload.single('file'),
     const filename = `${uuidv4()}${ext}`
     fs.writeFileSync(path.join(UPLOADS_DIR, 'images', filename), req.file.buffer)
 
-    const url = `${BASE_URL}/uploads/images/${filename}`
+    const url = `${BASE_URL}/api/uploads/images/${filename}`
     res.json({ url })
   } catch (err) {
     console.error('Upload image error:', err.message)
@@ -54,7 +54,7 @@ router.post('/model', authenticate, requireRole('admin'), upload.single('file'),
     const filename = `${uuidv4()}${ext}`
     fs.writeFileSync(path.join(UPLOADS_DIR, 'models', filename), req.file.buffer)
 
-    const url = `${BASE_URL}/uploads/models/${filename}`
+    const url = `${BASE_URL}/api/uploads/models/${filename}`
     res.json({ url, originalName: req.file.originalname, format: ext.replace('.', '').toUpperCase() })
   } catch (err) {
     console.error('Upload model error:', err.message)
