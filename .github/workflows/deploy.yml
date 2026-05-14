@@ -22,5 +22,5 @@ jobs:
             pm2 restart rks-api
             cd ..
             npm install
-            npm run build
+            VITE_API_URL=https://213-171-31-21.sslip.io npm run build
             sudo chmod -R 755 /home/user1/marketplace/dist
