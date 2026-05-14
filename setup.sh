@@ -2,13 +2,17 @@
 
 echo "🚀 Начинаем установку RKS Marketplace..."
 
-# Фикс DNS
+# Фикс DNS (убираем симлинк, пишем напрямую)
+rm -f /etc/resolv.conf
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
-chattr +i /etc/resolv.conf
 
-# Меняем зеркало apt на официальное
-sed -i 's|http://mirror.yandex.ru/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
-sed -i 's|http://ru.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+# Полностью заменяем sources.list на официальные репозитории Ubuntu
+cat > /etc/apt/sources.list << 'SOURCES'
+deb http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse
+SOURCES
 
 # Обновление системы
 apt update && apt upgrade -y
