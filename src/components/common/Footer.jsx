@@ -32,12 +32,9 @@ const Footer = () => {
   ]
 
   return (
-    <footer className="bg-slate-950 text-slate-400 mt-16">
-      {/* Top accent line */}
-      <div className="h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" />
-
+    <footer className="bg-slate-900 text-slate-400 mt-16 border-t border-slate-800">
       {/* Features strip */}
-      <div className="border-b border-white/5">
+      <div className="border-b border-slate-800/60">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map(({ icon: Icon, label }) => (
@@ -131,7 +128,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-slate-600">
             © {currentYear} АРОО «РКС» — 3D Маркетплейс. Все права защищены.
           </p>

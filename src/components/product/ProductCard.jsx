@@ -41,15 +41,15 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
 
   return (
     <div
-      className="group relative bg-white rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50/60 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
+      className="group relative bg-slate-900 rounded-2xl border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
       onClick={() => navigate(`/product/${product.id}`)}
     >
       {/* Favorite button */}
       <button
-        className={`absolute top-3 right-3 z-10 p-2 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-100 shadow-sm transition-all duration-200 hover:scale-110 ${
+        className={`absolute top-3 right-3 z-10 p-1.5 rounded-xl transition-all duration-200 hover:scale-110 border ${
           isFavorite
-            ? 'text-rose-500 border-rose-100 bg-rose-50/80'
-            : 'text-gray-300 hover:text-rose-400'
+            ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
+            : 'text-slate-600 bg-slate-800/80 border-slate-700/50 hover:text-rose-400 hover:border-rose-500/20'
         }`}
         style={{ boxShadow: 'none' }}
         onClick={e => { e.stopPropagation(); onToggleFavorite(product) }}
@@ -58,12 +58,12 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
         <Heart className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
       </button>
 
-      {/* Image */}
-      <div className="bg-gray-50 mx-3 mt-3 rounded-xl overflow-hidden flex items-center justify-center aspect-square">
+      {/* Image area */}
+      <div className="bg-slate-800/50 mx-3 mt-3 rounded-xl overflow-hidden flex items-center justify-center aspect-square">
         <img
           src={mainImage?.image_url || product.image_url}
           alt={product.name}
-          className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
+          className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105 drop-shadow-lg"
         />
       </div>
 
@@ -76,23 +76,23 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
               <img
                 src={product.brand.logo_url}
                 alt={product.brand.name}
-                className="h-4 w-auto object-contain"
+                className="h-4 w-auto object-contain opacity-70"
                 onError={e => { e.target.style.display = 'none' }}
               />
             ) : (
-              <span className="text-[11px] text-gray-400 uppercase tracking-widest font-semibold">
+              <span className="text-[11px] text-slate-600 uppercase tracking-widest font-semibold">
                 {product.brand?.name}
               </span>
             )}
           </div>
         ) : (
-          <span className="text-[11px] text-gray-400 uppercase tracking-widest font-semibold mb-1.5 block">
+          <span className="text-[11px] text-slate-600 uppercase tracking-widest font-semibold mb-1.5 block">
             {product.brand?.name}
           </span>
         )}
 
         {/* Name */}
-        <p className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug mb-3">
+        <p className="font-semibold text-sm text-white line-clamp-2 leading-snug mb-3">
           {product.name}
         </p>
 
@@ -105,8 +105,8 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
                   key={sizeItem.id}
                   className={`px-2 py-0.5 text-xs rounded-lg border font-medium transition-all duration-150 ${
                     selectedSizeId === sizeItem.id
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-400 hover:text-indigo-600'
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-transparent text-slate-400 border-slate-700 hover:border-indigo-500/60 hover:text-indigo-300'
                   }`}
                   style={{
                     ...(selectedSizeId === sizeItem.id && {
@@ -125,22 +125,22 @@ const ProductCard = ({ product, onToggleFavorite, isFavorite }) => {
               ))}
             </div>
           ) : (
-            <span className="text-xs text-gray-400">Нет в наличии</span>
+            <span className="text-xs text-slate-600">Нет в наличии</span>
           )}
         </div>
 
         {/* Price + Cart */}
         <div className="flex items-center justify-between mt-auto gap-2">
-          <span className="text-lg font-black text-gray-900">
+          <span className="text-lg font-black text-white">
             {product.price}&nbsp;₽
           </span>
           <button
-            className="flex items-center gap-1.5 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="flex items-center gap-1.5 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
             style={{
               backgroundColor: 'var(--primary-color, #4f46e5)',
               boxShadow: 'none',
             }}
-            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(0.9)' }}
+            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.1)' }}
             onMouseLeave={e => { e.currentTarget.style.filter = 'brightness(1)' }}
             onClick={handleAddToCart}
             disabled={availableSizes.length === 0 || addToCartMutation.isLoading}

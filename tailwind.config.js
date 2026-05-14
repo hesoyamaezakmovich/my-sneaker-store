@@ -30,8 +30,8 @@ export default {
       },
       keyframes: {
         'rotate-cube': {
-          '0%':   { transform: 'rotateX(20deg) rotateY(0deg)' },
-          '100%': { transform: 'rotateX(20deg) rotateY(360deg)' },
+          '0%':   { transform: 'rotateY(0deg)' },
+          '100%': { transform: 'rotateY(360deg)' },
         },
         'fade-up': {
           '0%':   { opacity: '0', transform: 'translateY(20px)' },
