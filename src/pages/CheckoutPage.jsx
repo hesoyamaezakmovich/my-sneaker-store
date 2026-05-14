@@ -25,10 +25,16 @@ export default function CheckoutPage() {
     if (cartItems.length === 0) return toast.error('Корзина пуста!')
     setSubmitting(true)
     try {
-      await createOrder({ notes })
+      const { order, confirmation_url } = await createOrder({ notes })
       await clearCartMutation.mutateAsync()
-      setOrdered(true)
-      toast.success('Заказ успешно оформлен!')
+
+      if (confirmation_url) {
+        toast.success('Заказ создан! Переходим к оплате...')
+        window.location.href = confirmation_url
+      } else {
+        setOrdered(true)
+        toast.success('Заказ успешно оформлен!')
+      }
     } catch (err) {
       toast.error(err.message || 'Ошибка оформления заказа')
     } finally {

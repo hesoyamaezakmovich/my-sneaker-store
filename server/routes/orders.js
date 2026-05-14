@@ -1,8 +1,59 @@
 const express = require('express')
 const crypto = require('crypto')
+const https = require('https')
 const { v4: uuidv4 } = require('uuid')
 const db = require('../db')
 const { authenticate, requireRole } = require('../middleware/auth')
+
+function createYookassaPayment({ amount, orderId, orderNumber }) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({
+      amount: { value: amount.toFixed(2), currency: 'RUB' },
+      confirmation: {
+        type: 'redirect',
+        return_url: `${process.env.FRONTEND_URL}/orders`,
+      },
+      capture: true,
+      description: `Заказ ${orderNumber}`,
+      metadata: { order_id: String(orderId) },
+    })
+
+    const auth = Buffer.from(
+      `${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`
+    ).toString('base64')
+
+    const options = {
+      hostname: 'api.yookassa.ru',
+      path: '/v3/payments',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotence-Key': String(orderId),
+        Authorization: `Basic ${auth}`,
+      },
+    }
+
+    const req = https.request(options, (res) => {
+      let data = ''
+      res.on('data', chunk => { data += chunk })
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data)
+          if (res.statusCode >= 400) {
+            reject(new Error(parsed.description || 'Ошибка ЮKassa'))
+          } else {
+            resolve(parsed)
+          }
+        } catch (e) {
+          reject(e)
+        }
+      })
+    })
+    req.on('error', reject)
+    req.write(body)
+    req.end()
+  })
+}
 
 const router = express.Router()
 
@@ -64,13 +115,33 @@ router.post('/', authenticate, async (req, res) => {
     // Если заказ бесплатный — сразу генерируем лицензии
     if (order.status === 'paid') {
       await completeFreeOrder(client, order.id, req.user.id)
+      await client.query('DELETE FROM cart_items WHERE user_id = $1', [req.user.id])
+      await client.query('COMMIT')
+      return res.status(201).json({ order })
+    }
+
+    // Платный заказ — создаём платёж в ЮKassa
+    let confirmationUrl = null
+    try {
+      const payment = await createYookassaPayment({
+        amount: totalAmount,
+        orderId: order.id,
+        orderNumber,
+      })
+      await client.query(
+        'UPDATE orders SET yookassa_payment_id = $1 WHERE id = $2',
+        [payment.id, order.id]
+      )
+      confirmationUrl = payment.confirmation.confirmation_url
+    } catch (paymentErr) {
+      console.error('YooKassa payment creation error:', paymentErr)
     }
 
     // Очищаем корзину
     await client.query('DELETE FROM cart_items WHERE user_id = $1', [req.user.id])
     await client.query('COMMIT')
 
-    res.status(201).json({ order })
+    res.status(201).json({ order, confirmation_url: confirmationUrl })
   } catch (err) {
     await client.query('ROLLBACK')
     console.error('Create order error:', err)

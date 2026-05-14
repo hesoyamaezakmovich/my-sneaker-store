@@ -10,6 +10,7 @@ const ordersRouter = require('./routes/orders')
 const adminRouter = require('./routes/admin')
 const favoritesRouter = require('./routes/favorites')
 const supportRouter = require('./routes/support')
+const paymentsRouter = require('./routes/payments')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -33,6 +34,7 @@ app.use('/api/orders', ordersRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/favorites', favoritesRouter)
 app.use('/api/support', supportRouter)
+app.use('/api/payments', paymentsRouter)
 
 // Health check
 app.get('/api/health', (req, res) => {

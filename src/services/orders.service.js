@@ -4,7 +4,7 @@ import api, { handleApiError } from './api'
 export const createOrder = async ({ notes } = {}) => {
   try {
     const { data } = await api.post('/orders', { notes })
-    return data.order
+    return { order: data.order, confirmation_url: data.confirmation_url }
   } catch (error) {
     throw new Error(handleApiError(error))
   }
