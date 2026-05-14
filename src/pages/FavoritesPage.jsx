@@ -43,18 +43,20 @@ export default function FavoritesPage() {
       </div>
 
       {models.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-slate-900 border border-slate-800 rounded-2xl text-center">
-          <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
-            <Heart className="w-8 h-8 text-slate-600" />
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-900 border border-slate-800 rounded-2xl text-center px-6">
+          <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mb-5 border border-slate-700">
+            <Heart className="w-10 h-10 text-slate-600" />
           </div>
-          <p className="text-slate-400 font-medium mb-1">Список избранного пуст</p>
-          <p className="text-slate-600 text-sm mb-6">Сохраняйте понравившиеся 3D-модели</p>
+          <p className="text-white font-semibold text-lg mb-2">Здесь пока пусто</p>
+          <p className="text-slate-500 text-sm mb-8 max-w-xs leading-relaxed">
+            Нажимайте <Heart className="w-3.5 h-3.5 inline text-rose-400" /> на карточках моделей — они сохранятся здесь
+          </p>
           <button
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-7 py-3 rounded-xl font-semibold text-sm transition shadow-lg shadow-indigo-950/40"
             style={{ boxShadow: 'none' }}
             onClick={() => navigate('/catalog')}
           >
-            В каталог <ArrowRight className="w-4 h-4" />
+            Перейти в каталог <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       ) : (

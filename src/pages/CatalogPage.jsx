@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import Button from '../components/ui/Button'
 import Input, { Select } from '../components/ui/Input'
 import ModelList from '../components/model/ModelList'
 import { fetchModels, fetchCategories, fetchTags } from '../services/models.service'
@@ -11,7 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { addToFavorites, removeFromFavorites } from '../services/favorites.service'
 import toast from 'react-hot-toast'
 import { useSearchParams } from 'react-router-dom'
-import { SlidersHorizontal, RotateCcw } from 'lucide-react'
+import { SlidersHorizontal, RotateCcw, Search } from 'lucide-react'
 
 const SORTS = [
   { label: 'Новинки',          value: 'newest'    },
@@ -27,23 +26,25 @@ const CatalogPage = () => {
   const addToCartMutation        = useAddToCart()
   const { data: favorites = [] } = useFavoritesQuery()
   const queryClient              = useQueryClient()
-  const [searchParams]           = useSearchParams()
+
+  // URL is the single source of truth for filters
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const filters = {
+    category: searchParams.get('category') || '',
+    tag:      searchParams.get('tag')      || '',
+    priceMin: searchParams.get('priceMin') || '',
+    priceMax: searchParams.get('priceMax') || '',
+    sort:     searchParams.get('sort')     || 'newest',
+    search:   searchParams.get('search')   || '',
+    isFree:   searchParams.get('isFree')   || '',
+  }
 
   const [categories, setCategories] = useState([])
   const [tags, setTags]             = useState([])
   const [models, setModels]         = useState([])
   const [total, setTotal]           = useState(0)
   const [loading, setLoading]       = useState(true)
-
-  const [filters, setFilters] = useState({
-    category: searchParams.get('category') || '',
-    tag:      searchParams.get('tag')      || '',
-    priceMin: '',
-    priceMax: '',
-    sort:     searchParams.get('sort')     || 'newest',
-    search:   '',
-    isFree:   '',
-  })
 
   useEffect(() => {
     Promise.all([fetchCategories(), fetchTags()])
@@ -72,10 +73,16 @@ const CatalogPage = () => {
       })
       .catch(() => toast.error('Ошибка загрузки моделей'))
       .finally(() => setLoading(false))
-  }, [filters])
+  }, [searchParams])
 
-  const handleChange = (name, value) =>
-    setFilters(prev => ({ ...prev, [name]: value }))
+  const handleChange = (name, value) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (value) next.set(name, value)
+      else next.delete(name)
+      return next
+    }, { replace: true })
+  }
 
   const handleAddToCart = async (model) => {
     if (!user) { setIsAuthModalOpen(true); return }
@@ -100,8 +107,10 @@ const CatalogPage = () => {
     else       addFavoriteMutation.mutate(model.id)
   }
 
-  const resetFilters = () =>
-    setFilters({ category: '', tag: '', priceMin: '', priceMax: '', sort: 'newest', search: '', isFree: '' })
+  const resetFilters = () => setSearchParams({}, { replace: true })
+
+  const hasActiveFilters = filters.category || filters.tag || filters.priceMin ||
+    filters.priceMax || filters.search || filters.isFree || filters.sort !== 'newest'
 
   const categoryOptions = [{ label: 'Все категории', value: '' }, ...categories.map(c => ({ label: c.name, value: c.slug }))]
   const tagOptions      = [{ label: 'Все теги',      value: '' }, ...tags.map(t => ({ label: t.name, value: t.slug }))]
@@ -118,9 +127,14 @@ const CatalogPage = () => {
         {/* ── Фильтры ── */}
         <aside className="w-full md:w-64 flex-shrink-0">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sticky top-24">
-            <div className="flex items-center gap-2 mb-5">
-              <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
-              <h2 className="text-sm font-semibold text-white">Фильтры</h2>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
+                <h2 className="text-sm font-semibold text-white">Фильтры</h2>
+              </div>
+              {hasActiveFilters && (
+                <span className="w-2 h-2 rounded-full bg-indigo-500" title="Применены фильтры" />
+              )}
             </div>
 
             <div className="space-y-4">
@@ -186,8 +200,13 @@ const CatalogPage = () => {
 
               <button
                 onClick={resetFilters}
-                className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-sm font-medium py-2.5 rounded-xl transition-all duration-200"
+                className={`w-full flex items-center justify-center gap-2 border text-sm font-medium py-2.5 rounded-xl transition-all duration-200 ${
+                  hasActiveFilters
+                    ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20'
+                    : 'bg-slate-800 border-slate-700 text-slate-500 cursor-default'
+                }`}
                 style={{ boxShadow: 'none' }}
+                disabled={!hasActiveFilters}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Сбросить фильтры
@@ -198,10 +217,15 @@ const CatalogPage = () => {
 
         {/* ── Список моделей ── */}
         <div className="flex-1 min-w-0">
-          <div className="mb-4">
+          <div className="mb-4 flex items-center gap-3">
             <span className="text-sm text-slate-500">
               {loading ? 'Загрузка...' : `Найдено: ${total} ${total === 1 ? 'модель' : total < 5 ? 'модели' : 'моделей'}`}
             </span>
+            {hasActiveFilters && !loading && (
+              <span className="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full">
+                фильтры активны
+              </span>
+            )}
           </div>
 
           {loading ? (
@@ -216,22 +240,25 @@ const CatalogPage = () => {
             </div>
           ) : models.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 bg-slate-900 border border-slate-800 rounded-2xl">
-              <div className="text-4xl mb-4 opacity-30">
-                <svg className="w-16 h-16 text-slate-600" fill="none" viewBox="0 0 48 48">
-                  <path d="M24 4L44 15V33L24 44L4 33V15L24 4Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                  <path d="M24 4V44M4 15L24 26L44 15" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
+              <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mb-5">
+                <Search className="w-9 h-9 text-slate-600" />
               </div>
-              <p className="text-slate-400 font-medium mb-1">Ничего не найдено</p>
-              <p className="text-slate-600 text-sm mb-5">Попробуйте изменить параметры поиска</p>
-              <button
-                onClick={resetFilters}
-                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-sm font-medium px-5 py-2.5 rounded-xl transition-all"
-                style={{ boxShadow: 'none' }}
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Сбросить фильтры
-              </button>
+              <p className="text-white font-semibold mb-1">Ничего не найдено</p>
+              <p className="text-slate-500 text-sm mb-6 text-center max-w-xs">
+                {hasActiveFilters
+                  ? 'По заданным фильтрам моделей не нашлось. Попробуйте изменить параметры.'
+                  : 'В каталоге пока нет моделей.'}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={resetFilters}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
+                  style={{ boxShadow: 'none' }}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Сбросить фильтры
+                </button>
+              )}
             </div>
           ) : (
             <ModelList

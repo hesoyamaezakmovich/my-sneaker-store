@@ -40,17 +40,19 @@ const CartDrawer = ({ open, onClose, onCheckout }) => {
         <div className="flex-1 overflow-y-auto">
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-              <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
-                <ShoppingCart className="w-9 h-9 text-slate-600" />
+              <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mb-5 border border-slate-700">
+                <ShoppingCart className="w-10 h-10 text-slate-600" />
               </div>
-              <h3 className="text-base font-semibold text-white mb-2">Корзина пуста</h3>
-              <p className="text-slate-500 text-sm mb-6">Добавьте 3D-модели для оформления заказа</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Корзина пуста</h3>
+              <p className="text-slate-500 text-sm mb-8 leading-relaxed max-w-[220px]">
+                Добавьте 3D-модели из каталога, чтобы оформить заказ
+              </p>
               <Link
                 to="/catalog"
                 onClick={onClose}
-                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-7 py-3 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-indigo-950/40"
               >
-                В каталог <ArrowRight className="w-4 h-4" />
+                Перейти в каталог <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           ) : (
