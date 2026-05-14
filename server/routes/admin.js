@@ -44,6 +44,45 @@ router.get('/stats', async (req, res) => {
   }
 })
 
+// GET /api/admin/models — все модели для админа
+router.get('/models', async (req, res) => {
+  try {
+    const { search, status, limit = 100, offset = 0 } = req.query
+    let where = []
+    const params = []
+
+    if (search) {
+      params.push(`%${search}%`)
+      where.push(`(m.title ILIKE $${params.length} OR u.email ILIKE $${params.length})`)
+    }
+    if (status) {
+      params.push(status)
+      where.push(`m.status = $${params.length}`)
+    }
+
+    params.push(parseInt(limit), parseInt(offset))
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : ''
+
+    const result = await db.query(
+      `SELECT m.id, m.title, m.price, m.is_free, m.status, m.preview_image_url,
+              m.download_count, m.created_at,
+              u.email AS author_email,
+              p.display_name AS author_name
+       FROM models m
+       JOIN users u ON u.id = m.author_id
+       LEFT JOIN profiles p ON p.id = m.author_id
+       ${whereClause}
+       ORDER BY m.created_at DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params
+    )
+    res.json({ models: result.rows })
+  } catch (err) {
+    console.error('Admin models error:', err)
+    res.status(500).json({ error: 'Ошибка получения моделей' })
+  }
+})
+
 // GET /api/admin/moderation
 router.get('/moderation', async (req, res) => {
   try {

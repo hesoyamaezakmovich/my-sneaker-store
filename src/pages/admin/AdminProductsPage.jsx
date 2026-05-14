@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Eye } from 'lucide-react'
-import { fetchModels, deleteModel } from '../../services/models.service'
+import { deleteModel } from '../../services/models.service'
+import api from '../../services/api'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { MODEL_STATUS_LABELS } from '../../utils/constants'
@@ -23,8 +24,8 @@ const AdminProductsPage = () => {
 
   useEffect(() => {
     setLoading(true)
-    fetchModels({ limit: 100 })
-      .then(data => setModels(data.models || []))
+    api.get('/admin/models', { params: { limit: 100 } })
+      .then(({ data }) => setModels(data.models || []))
       .catch(() => toast.error('Ошибка загрузки'))
       .finally(() => setLoading(false))
   }, [])
