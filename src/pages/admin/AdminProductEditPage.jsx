@@ -30,7 +30,7 @@ const AdminProductEditPage = () => {
     polygonCount: '',
     softwareUsed: '',
     tags: [],
-    status: 'draft',
+    status: 'published',
   })
 
   useEffect(() => {
@@ -209,19 +209,17 @@ const AdminProductEditPage = () => {
               ))}
             </div>
           </div>
-          {isEdit && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Статус</label>
-              <select value={form.status} onChange={e => handleChange('status', e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
-                <option value="draft">Черновик</option>
-                <option value="pending_review">На проверке</option>
-                <option value="published">Опубликована</option>
-                <option value="rejected">Отклонена</option>
-                <option value="archived">В архиве</option>
-              </select>
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Статус</label>
+            <select value={form.status} onChange={e => handleChange('status', e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
+              <option value="draft">Черновик</option>
+              <option value="pending_review">На проверке</option>
+              <option value="published">Опубликована</option>
+              <option value="rejected">Отклонена</option>
+              <option value="archived">В архиве</option>
+            </select>
+          </div>
         </div>
 
         {/* Загрузка файлов */}
