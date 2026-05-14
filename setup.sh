@@ -2,6 +2,14 @@
 
 echo "🚀 Начинаем установку RKS Marketplace..."
 
+# Фикс DNS
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+chattr +i /etc/resolv.conf
+
+# Меняем зеркало apt на официальное
+sed -i 's|http://mirror.yandex.ru/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+sed -i 's|http://ru.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+
 # Обновление системы
 apt update && apt upgrade -y
 
@@ -95,7 +103,7 @@ rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl restart nginx
 
 # SSL сертификат
-certbot --nginx -d $SSLIP_DOMAIN --non-interactive --agree-tos -m admin@rks.ru --redirect
+certbot --nginx -d $SSLIP_DOMAIN --non-interactive --agree-tos -m ruslanabramov606@gmail.com --redirect
 
 # Nginx — финальный конфиг с HTTPS
 cat > /etc/nginx/sites-available/marketplace << EOF
@@ -134,12 +142,7 @@ cd /home/user1/marketplace && node database/seed.cjs
 echo "✅ Установка завершена!"
 echo "🌐 Сайт доступен по адресу: https://$SSLIP_DOMAIN"
 echo ""
-echo "⚠️  Не забудь обновить ключи ЮKassa в файле:"
-echo "   /home/user1/marketplace/server/.env"
-echo "   YOOKASSA_SHOP_ID=your_shop_id"
-echo "   YOOKASSA_SECRET_KEY=your_secret_key"
-echo ""
-echo "🔔 Webhook для ЮKassa:"
+echo "🔔 Webhook для ЮKassa — добавь в личном кабинете:"
 echo "   https://$SSLIP_DOMAIN/api/payments/webhook"
 echo ""
 echo "👥 Тестовые пользователи:"
