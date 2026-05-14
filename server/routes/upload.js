@@ -17,6 +17,16 @@ const s3 = new S3Client({
   forcePathStyle: true,
 })
 
+if (process.env.S3_TENANT_ID) {
+  s3.middlewareStack.add(
+    (next) => async (args) => {
+      args.request.headers['x-amz-account-id'] = process.env.S3_TENANT_ID
+      return next(args)
+    },
+    { step: 'build', name: 'tenantIdMiddleware' }
+  )
+}
+
 const BUCKET = process.env.S3_BUCKET
 
 const upload = multer({
