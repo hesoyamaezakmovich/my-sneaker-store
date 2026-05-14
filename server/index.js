@@ -11,6 +11,7 @@ const adminRouter = require('./routes/admin')
 const favoritesRouter = require('./routes/favorites')
 const supportRouter = require('./routes/support')
 const paymentsRouter = require('./routes/payments')
+const uploadRouter = require('./routes/upload')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -35,6 +36,7 @@ app.use('/api/admin', adminRouter)
 app.use('/api/favorites', favoritesRouter)
 app.use('/api/support', supportRouter)
 app.use('/api/payments', paymentsRouter)
+app.use('/api/upload', uploadRouter)
 
 // Health check
 app.get('/api/health', (req, res) => {

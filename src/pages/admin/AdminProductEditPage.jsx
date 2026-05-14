@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Upload, X, Image, Box } from 'lucide-react'
 import { fetchModelById, createModel, updateModel, fetchCategories, fetchTags } from '../../services/models.service'
+import api from '../../services/api'
 import toast from 'react-hot-toast'
 import { MODEL_FORMATS, LICENSE_TYPES, LICENSE_TYPE_LABELS } from '../../utils/constants'
 
@@ -13,6 +14,12 @@ const AdminProductEditPage = () => {
   const [saving, setSaving] = useState(false)
   const [categories, setCategories] = useState([])
   const [tags, setTags] = useState([])
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [modelFile, setModelFile] = useState(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadingModel, setUploadingModel] = useState(false)
+  const imageInputRef = useRef()
+  const modelInputRef = useRef()
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -46,12 +53,51 @@ const AdminProductEditPage = () => {
             tags: model.tags?.map(t => t.id) || [],
             status: model.status || 'draft',
           })
+          setPreviewUrl(model.preview_image_url || '')
         })
         .finally(() => setLoading(false))
     }
   }, [id])
 
   const handleChange = (key, value) => setForm(prev => ({ ...prev, [key]: value }))
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { data } = await api.post('/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setPreviewUrl(data.url)
+      toast.success('Картинка загружена')
+    } catch {
+      toast.error('Ошибка загрузки картинки')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const handleModelUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadingModel(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { data } = await api.post('/upload/model', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setModelFile({ url: data.url, name: data.originalName, format: data.format })
+      toast.success('3D файл загружен')
+    } catch {
+      toast.error('Ошибка загрузки 3D файла')
+    } finally {
+      setUploadingModel(false)
+    }
+  }
 
   const handleTagToggle = (tagId) => {
     setForm(prev => ({
@@ -65,11 +111,12 @@ const AdminProductEditPage = () => {
     if (!form.title) { toast.error('Введите название'); return }
     setSaving(true)
     try {
+      const payload = { ...form, previewImageUrl: previewUrl, modelFile }
       if (isEdit) {
-        await updateModel(id, form)
+        await updateModel(id, payload)
         toast.success('Модель обновлена')
       } else {
-        await createModel(form)
+        await createModel(payload)
         toast.success('Модель создана')
       }
       navigate('/admin/models')
@@ -175,6 +222,68 @@ const AdminProductEditPage = () => {
               </select>
             </div>
           )}
+        </div>
+
+        {/* Загрузка файлов */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
+          <h3 className="text-sm font-semibold text-gray-700">Файлы</h3>
+
+          {/* Превью картинка */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Превью картинка</label>
+            <div className="flex items-start gap-4">
+              {previewUrl ? (
+                <div className="relative">
+                  <img src={previewUrl} alt="preview" className="w-24 h-24 rounded-lg object-cover border" />
+                  <button type="button" onClick={() => setPreviewUrl('')}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
+                  <Image className="w-8 h-8 text-gray-300" />
+                </div>
+              )}
+              <div>
+                <input ref={imageInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" className="hidden" onChange={handleImageUpload} />
+                <button type="button" onClick={() => imageInputRef.current.click()}
+                  disabled={uploadingImage}
+                  className="flex items-center gap-2 text-sm border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50">
+                  <Upload className="w-4 h-4" />
+                  {uploadingImage ? 'Загрузка...' : 'Загрузить картинку'}
+                </button>
+                <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP до 100MB</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 3D файл */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">3D файл <span className="text-gray-400 font-normal">(необязательно)</span></label>
+            <div className="flex items-center gap-4">
+              {modelFile ? (
+                <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 text-sm">
+                  <Box className="w-4 h-4 text-blue-500" />
+                  <span className="text-gray-700">{modelFile.name}</span>
+                  <span className="text-xs text-gray-400">{modelFile.format}</span>
+                  <button type="button" onClick={() => setModelFile(null)}>
+                    <X className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                  </button>
+                </div>
+              ) : null}
+              <div>
+                <input ref={modelInputRef} type="file" accept=".fbx,.obj,.glb,.gltf,.stl,.blend,.zip" className="hidden" onChange={handleModelUpload} />
+                <button type="button" onClick={() => modelInputRef.current.click()}
+                  disabled={uploadingModel}
+                  className="flex items-center gap-2 text-sm border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50">
+                  <Upload className="w-4 h-4" />
+                  {uploadingModel ? 'Загрузка...' : (modelFile ? 'Заменить файл' : 'Загрузить 3D файл')}
+                </button>
+                <p className="text-xs text-gray-400 mt-1">FBX, OBJ, GLB, GLTF, STL, Blend, ZIP</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button type="submit" disabled={saving}

@@ -202,16 +202,16 @@ router.get('/:id/similar', async (req, res) => {
 
 // POST /api/models - создать модель (автор)
 router.post('/', authenticate, requireRole('author', 'admin'), async (req, res) => {
-  const { title, description, price, categoryId, isFree, licenseType, polygonCount, softwareUsed, tags } = req.body
+  const { title, description, price, categoryId, isFree, licenseType, polygonCount, softwareUsed, tags, previewImageUrl, modelFile } = req.body
 
   if (!title) return res.status(400).json({ error: 'Название обязательно' })
 
   try {
     const result = await db.query(
-      `INSERT INTO models (author_id, category_id, title, description, price, is_free, license_type, polygon_count, software_used, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'draft')
+      `INSERT INTO models (author_id, category_id, title, description, price, is_free, license_type, polygon_count, software_used, preview_image_url, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'draft')
        RETURNING *`,
-      [req.user.id, categoryId || null, title, description, price || 0, isFree || false, licenseType || 'standard', polygonCount || null, softwareUsed || null]
+      [req.user.id, categoryId || null, title, description, price || 0, isFree || false, licenseType || 'standard', polygonCount || null, softwareUsed || null, previewImageUrl || null]
     )
     const model = result.rows[0]
 
@@ -219,6 +219,14 @@ router.post('/', authenticate, requireRole('author', 'admin'), async (req, res) 
       for (const tagId of tags) {
         await db.query('INSERT INTO model_tags (model_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [model.id, tagId])
       }
+    }
+
+    if (modelFile?.url) {
+      await db.query(
+        `INSERT INTO model_files (model_id, file_url, file_name, file_format, file_size)
+         VALUES ($1, $2, $3, $4, 0)`,
+        [model.id, modelFile.url, modelFile.name, modelFile.format]
+      )
     }
 
     res.status(201).json({ model })
@@ -230,7 +238,7 @@ router.post('/', authenticate, requireRole('author', 'admin'), async (req, res) 
 
 // PATCH /api/models/:id
 router.patch('/:id', authenticate, async (req, res) => {
-  const { title, description, price, categoryId, isFree, licenseType, polygonCount, softwareUsed, tags, status } = req.body
+  const { title, description, price, categoryId, isFree, licenseType, polygonCount, softwareUsed, tags, status, previewImageUrl, modelFile } = req.body
 
   try {
     const existing = await db.query('SELECT * FROM models WHERE id = $1', [req.params.id])
@@ -258,9 +266,10 @@ router.patch('/:id', authenticate, async (req, res) => {
         polygon_count = COALESCE($7, polygon_count),
         software_used = COALESCE($8, software_used),
         status = COALESCE($9, status),
+        preview_image_url = COALESCE($11, preview_image_url),
         updated_at = NOW()
        WHERE id = $10 RETURNING *`,
-      [title, description, price, categoryId, isFree, licenseType, polygonCount, softwareUsed, newStatus, req.params.id]
+      [title, description, price, categoryId, isFree, licenseType, polygonCount, softwareUsed, newStatus, req.params.id, previewImageUrl || null]
     )
 
     if (tags && Array.isArray(tags)) {
@@ -268,6 +277,15 @@ router.patch('/:id', authenticate, async (req, res) => {
       for (const tagId of tags) {
         await db.query('INSERT INTO model_tags (model_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [req.params.id, tagId])
       }
+    }
+
+    if (modelFile?.url) {
+      await db.query('DELETE FROM model_files WHERE model_id = $1', [req.params.id])
+      await db.query(
+        `INSERT INTO model_files (model_id, file_url, file_name, file_format, file_size)
+         VALUES ($1, $2, $3, $4, 0)`,
+        [req.params.id, modelFile.url, modelFile.name, modelFile.format]
+      )
     }
 
     res.json({ model: result.rows[0] })
