@@ -15,13 +15,13 @@ jobs:
           username: user1
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            sudo chown -R user1:user1 /home/user1/marketplace
             cd /home/user1/marketplace
             git pull origin main
             cd server
-            npm install
-            pm2 describe rks-api > /dev/null 2>&1 && pm2 restart rks-api || pm2 start index.js --name rks-api --env production
+            npm install --prefer-offline || npm install
+            pm2 describe rks-api > /dev/null 2>&1 && pm2 restart rks-api || pm2 start index.js --name rks-api
             pm2 save
             cd ..
-            npm install
+            npm install --prefer-offline || npm install
             VITE_API_URL=https://176-108-255-28.sslip.io npm run build
-            sudo chmod -R 755 /home/user1/marketplace/dist
