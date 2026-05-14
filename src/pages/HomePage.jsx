@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { motion, useInView } from 'framer-motion'
 import { Box, Layers, Download, Shield, Star, ArrowRight, Zap } from 'lucide-react'
 import { fetchModels, fetchCategories } from '../services/models.service'
 import ModelList from '../components/model/ModelList'
@@ -43,6 +44,47 @@ const CATEGORY_ACCENTS = [
   { border: 'hover:border-pink-500/40',   icon: '🐾', glow: 'group-hover:text-pink-400' },
   { border: 'hover:border-teal-500/40',   icon: '💎', glow: 'group-hover:text-teal-400' },
 ]
+
+/* ─── Reusable scroll-reveal wrapper ─── */
+const FadeUp = ({ children, delay = 0, className = '' }) => (
+  <motion.div
+    className={className}
+    initial={{ opacity: 0, y: 32 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: '-60px' }}
+    transition={{ duration: 0.55, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+  >
+    {children}
+  </motion.div>
+)
+
+/* ─── Animated counter ─── */
+const CountUp = ({ target, suffix }) => {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true })
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!isInView) return
+    let current = 0
+    const duration = 1400
+    const steps = 60
+    const increment = target / steps
+    const interval = duration / steps
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= target) {
+        setCount(target)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(current))
+      }
+    }, interval)
+    return () => clearInterval(timer)
+  }, [isInView, target])
+
+  return <span ref={ref}>{count}{suffix}</span>
+}
 
 /* ─── CSS 3D Cube ─── */
 const Cube3D = () => (
@@ -145,11 +187,21 @@ const HomePage = () => {
 
         <div className="relative max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Text */}
-          <div className="flex-1 text-center lg:text-left">
-            <span className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold px-4 py-2 rounded-full mb-6">
+          <motion.div
+            className="flex-1 text-center lg:text-left"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <motion.span
+              className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold px-4 py-2 rounded-full mb-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
               <Zap className="w-3.5 h-3.5" />
               АРОО «РКС» — Маркетплейс 3D-моделей
-            </span>
+            </motion.span>
 
             <h1 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black text-white leading-[1.08] tracking-tight mb-5">
               Профессиональные
@@ -165,7 +217,12 @@ const HomePage = () => {
               Покупайте и продавайте высококачественные 3D-модели — архитектура, персонажи, транспорт, интерьеры и многое другое.
             </p>
 
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+            <motion.div
+              className="flex flex-wrap gap-3 justify-center lg:justify-start"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
               <Link
                 to="/catalog"
                 className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-950/60"
@@ -179,47 +236,58 @@ const HomePage = () => {
               >
                 Стать автором
               </Link>
-            </div>
+            </motion.div>
 
-            {/* Stats */}
-            <div className="flex items-center gap-8 mt-10 justify-center lg:justify-start">
+            {/* Stats with CountUp */}
+            <motion.div
+              className="flex items-center gap-8 mt-10 justify-center lg:justify-start"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+            >
               {[
-                { val: '10K+', label: 'Моделей' },
-                { val: '500+', label: 'Авторов' },
-                { val: '50K+', label: 'Покупок' },
-              ].map(({ val, label }, i) => (
+                { target: 10, suffix: 'K+', label: 'Моделей' },
+                { target: 500, suffix: '+', label: 'Авторов' },
+                { target: 50, suffix: 'K+', label: 'Покупок' },
+              ].map(({ target, suffix, label }, i) => (
                 <React.Fragment key={label}>
                   {i > 0 && <div className="w-px h-8 bg-slate-800" />}
                   <div>
-                    <p className="text-2xl font-black text-white">{val}</p>
+                    <p className="text-2xl font-black text-white">
+                      <CountUp target={target} suffix={suffix} />
+                    </p>
                     <p className="text-slate-500 text-xs mt-0.5">{label}</p>
                   </div>
                 </React.Fragment>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* 3D Cube */}
-          <div className="flex-shrink-0">
+          <motion.div
+            className="flex-shrink-0"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+          >
             <Cube3D />
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ── Features ── */}
       <section>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 transition-all duration-300"
-            >
-              <div className={`w-11 h-11 ${f.bg} rounded-xl flex items-center justify-center mb-4`}>
-                {f.icon}
+          {FEATURES.map((f, i) => (
+            <FadeUp key={f.title} delay={i * 0.08}>
+              <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/60 transition-all duration-300 h-full">
+                <div className={`w-11 h-11 ${f.bg} rounded-xl flex items-center justify-center mb-4`}>
+                  {f.icon}
+                </div>
+                <h3 className="font-semibold text-white mb-2">{f.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
               </div>
-              <h3 className="font-semibold text-white mb-2">{f.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
-            </div>
+            </FadeUp>
           ))}
         </div>
       </section>
@@ -227,34 +295,37 @@ const HomePage = () => {
       {/* ── Categories ── */}
       {categories.length > 0 && (
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Категории</h2>
-              <p className="text-slate-500 text-sm mt-0.5">Найдите нужную 3D-модель</p>
+          <FadeUp>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Категории</h2>
+                <p className="text-slate-500 text-sm mt-0.5">Найдите нужную 3D-модель</p>
+              </div>
+              <Link
+                to="/catalog"
+                className="text-indigo-400 hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors"
+              >
+                Все <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-            <Link
-              to="/catalog"
-              className="text-indigo-400 hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors"
-            >
-              Все <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          </FadeUp>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {categories.slice(0, 10).map((cat, i) => {
               const acc = CATEGORY_ACCENTS[i % CATEGORY_ACCENTS.length]
               return (
-                <Link
-                  key={cat.id}
-                  to={`/catalog?category=${cat.slug}`}
-                  className={`group flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-900 border border-slate-800 ${acc.border} hover:bg-slate-800/60 hover:-translate-y-0.5 transition-all duration-300`}
-                >
-                  <span className="text-2xl mb-2 transition-transform duration-300 group-hover:scale-110">
-                    {acc.icon}
-                  </span>
-                  <span className={`text-xs font-semibold text-slate-400 text-center ${acc.glow} transition-colors`}>
-                    {cat.name}
-                  </span>
-                </Link>
+                <FadeUp key={cat.id} delay={i * 0.05}>
+                  <Link
+                    to={`/catalog?category=${cat.slug}`}
+                    className={`group flex flex-col items-center justify-center p-5 rounded-2xl bg-slate-900 border border-slate-800 ${acc.border} hover:bg-slate-800/60 hover:-translate-y-0.5 transition-all duration-300`}
+                  >
+                    <span className="text-2xl mb-2 transition-transform duration-300 group-hover:scale-110">
+                      {acc.icon}
+                    </span>
+                    <span className={`text-xs font-semibold text-slate-400 text-center ${acc.glow} transition-colors`}>
+                      {cat.name}
+                    </span>
+                  </Link>
+                </FadeUp>
               )
             })}
           </div>
@@ -262,62 +333,66 @@ const HomePage = () => {
       )}
 
       {/* ── Popular Models ── */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Популярные модели</h2>
-            <p className="text-slate-500 text-sm mt-0.5">Самые востребованные работы</p>
+      <FadeUp>
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Популярные модели</h2>
+              <p className="text-slate-500 text-sm mt-0.5">Самые востребованные работы</p>
+            </div>
+            <Link
+              to="/catalog?sort=popular"
+              className="text-indigo-400 hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors"
+            >
+              Смотреть все <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-          <Link
-            to="/catalog?sort=popular"
-            className="text-indigo-400 hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors"
-          >
-            Смотреть все <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="rounded-2xl bg-slate-900 border border-slate-800 p-4 flex flex-col animate-pulse">
-                <div className="w-full aspect-square bg-slate-800 rounded-xl mb-3" />
-                <div className="h-3.5 w-3/4 bg-slate-800 rounded-lg mb-2" />
-                <div className="h-3.5 w-1/2 bg-slate-800/60 rounded-lg" />
-              </div>
-            ))}
-          </div>
-        ) : popularModels.length > 0 ? (
-          <ModelList models={popularModels} />
-        ) : (
-          <div className="text-slate-500 text-center py-16 bg-slate-900 rounded-2xl border border-slate-800">
-            Нет моделей для отображения
-          </div>
-        )}
-      </section>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-2xl bg-slate-900 border border-slate-800 p-4 flex flex-col animate-pulse">
+                  <div className="w-full aspect-square bg-slate-800 rounded-xl mb-3" />
+                  <div className="h-3.5 w-3/4 bg-slate-800 rounded-lg mb-2" />
+                  <div className="h-3.5 w-1/2 bg-slate-800/60 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          ) : popularModels.length > 0 ? (
+            <ModelList models={popularModels} />
+          ) : (
+            <div className="text-slate-500 text-center py-16 bg-slate-900 rounded-2xl border border-slate-800">
+              Нет моделей для отображения
+            </div>
+          )}
+        </section>
+      </FadeUp>
 
       {/* ── CTA ── */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 p-12 text-center">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent)] pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-px bg-white/20 pointer-events-none" />
-        <div className="relative">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-white/10 rounded-2xl border border-white/15 mb-5">
-            <Box className="w-7 h-7 text-white" />
+      <FadeUp>
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 p-12 text-center">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),transparent)] pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-px bg-white/20 pointer-events-none" />
+          <div className="relative">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-white/10 rounded-2xl border border-white/15 mb-5">
+              <Box className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-3">
+              Вы создаёте 3D-модели?
+            </h3>
+            <p className="text-indigo-200 mb-8 max-w-sm mx-auto">
+              Станьте автором на платформе и начните зарабатывать на своих работах
+            </p>
+            <Link
+              to="/author"
+              className="inline-flex items-center gap-2 bg-white text-indigo-700 font-bold px-8 py-3.5 rounded-xl hover:bg-indigo-50 transition-colors shadow-xl shadow-indigo-950/40"
+            >
+              Открыть кабинет автора
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-          <h3 className="text-2xl md:text-3xl font-black text-white mb-3">
-            Вы создаёте 3D-модели?
-          </h3>
-          <p className="text-indigo-200 mb-8 max-w-sm mx-auto">
-            Станьте автором на платформе и начните зарабатывать на своих работах
-          </p>
-          <Link
-            to="/author"
-            className="inline-flex items-center gap-2 bg-white text-indigo-700 font-bold px-8 py-3.5 rounded-xl hover:bg-indigo-50 transition-colors shadow-xl shadow-indigo-950/40"
-          >
-            Открыть кабинет автора
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
+        </section>
+      </FadeUp>
 
     </div>
   )
