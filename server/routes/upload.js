@@ -41,14 +41,13 @@ router.post('/image', authenticate, requireRole('admin'), upload.single('file'),
       Key: key,
       Body: req.file.buffer,
       ContentType: req.file.mimetype,
-      ACL: 'public-read',
     }))
 
     const url = `${process.env.S3_ENDPOINT}/${BUCKET}/${key}`
     res.json({ url })
   } catch (err) {
-    console.error('Upload image error:', err)
-    res.status(500).json({ error: 'Ошибка загрузки файла' })
+    console.error('Upload image error:', err.message, err.Code, err.$metadata)
+    res.status(500).json({ error: 'Ошибка загрузки файла', detail: err.message })
   }
 })
 
@@ -74,8 +73,8 @@ router.post('/model', authenticate, requireRole('admin'), upload.single('file'),
     const url = `${process.env.S3_ENDPOINT}/${BUCKET}/${key}`
     res.json({ url, originalName: req.file.originalname, format: ext.replace('.', '').toUpperCase() })
   } catch (err) {
-    console.error('Upload model error:', err)
-    res.status(500).json({ error: 'Ошибка загрузки файла' })
+    console.error('Upload model error:', err.message, err.Code, err.$metadata)
+    res.status(500).json({ error: 'Ошибка загрузки файла', detail: err.message })
   }
 })
 
