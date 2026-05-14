@@ -1,17 +1,15 @@
 const AboutPage = () => (
   <div className="max-w-3xl mx-auto py-16 px-4">
-    <h1 className="text-3xl font-bold mb-6 text-gray-900">О платформе</h1>
-
-    <p className="mb-6 text-gray-700 leading-relaxed">
+    <h1 className="text-3xl font-bold text-white mb-6">О платформе</h1>
+    <p className="mb-6 text-slate-400 leading-relaxed">
       РКС 3D Маркетплейс — это онлайн-площадка для покупки и продажи профессиональных 3D-моделей,
       разработанная АРОО «РКС» (Архангельская региональная общественная организация по развитию
       компьютерного спорта и цифровых технологий). Наша миссия — создать удобное пространство,
       где авторы могут монетизировать свои работы, а покупатели — находить качественные 3D-ресурсы
       для любых проектов.
     </p>
-
-    <h2 className="text-xl font-semibold mb-3 text-gray-900">Наши преимущества</h2>
-    <ul className="list-disc pl-5 text-gray-600 mb-6 space-y-2">
+    <h2 className="text-xl font-semibold text-white mb-3">Наши преимущества</h2>
+    <ul className="list-disc pl-5 text-slate-400 mb-6 space-y-2">
       <li>Широкий каталог 3D-моделей: архитектура, персонажи, транспорт, интерьеры и многое другое</li>
       <li>Поддержка форматов OBJ, FBX, STL, GLTF, GLB, BLEND, MAX, MAYA, C4D</li>
       <li>Мгновенная цифровая доставка — ссылка активна 72 часа после покупки</li>
@@ -19,9 +17,8 @@ const AboutPage = () => (
       <li>Все модели проходят обязательную модерацию перед публикацией</li>
       <li>Прозрачная система выплат авторам</li>
     </ul>
-
-    <h2 className="text-xl font-semibold mb-3 text-gray-900">Для авторов</h2>
-    <p className="text-gray-600 leading-relaxed">
+    <h2 className="text-xl font-semibold text-white mb-3">Для авторов</h2>
+    <p className="text-slate-400 leading-relaxed">
       Зарегистрируйтесь как автор, загружайте свои 3D-модели и начните зарабатывать на своих
       творческих работах. Мы обеспечиваем удобный личный кабинет, статистику продаж и
       безопасную систему расчётов.

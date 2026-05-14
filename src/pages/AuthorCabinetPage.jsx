@@ -8,11 +8,11 @@ import { MODEL_STATUS_LABELS } from '../utils/constants'
 import toast from 'react-hot-toast'
 
 const STATUS_ICONS = {
-  draft: <Clock className="w-4 h-4 text-gray-400" />,
-  pending_review: <AlertCircle className="w-4 h-4 text-yellow-500" />,
-  published: <CheckCircle className="w-4 h-4 text-green-500" />,
-  rejected: <XCircle className="w-4 h-4 text-red-500" />,
-  archived: <Clock className="w-4 h-4 text-gray-300" />,
+  draft: <Clock className="w-4 h-4 text-slate-500" />,
+  pending_review: <AlertCircle className="w-4 h-4 text-yellow-400" />,
+  published: <CheckCircle className="w-4 h-4 text-emerald-400" />,
+  rejected: <XCircle className="w-4 h-4 text-red-400" />,
+  archived: <Clock className="w-4 h-4 text-slate-600" />,
 }
 
 const AuthorCabinetPage = () => {
@@ -60,9 +60,9 @@ const AuthorCabinetPage = () => {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="h-4 bg-gray-100 rounded w-72" />
-          {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-100 rounded-xl" />)}
+          <div className="h-8 bg-slate-800 rounded w-48" />
+          <div className="h-4 bg-slate-800/60 rounded w-72" />
+          {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-800/60 rounded-xl" />)}
         </div>
       </div>
     )
@@ -72,8 +72,8 @@ const AuthorCabinetPage = () => {
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Кабинет автора</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-3xl font-bold text-white">Кабинет автора</h1>
+          <p className="text-slate-400 mt-1">
             Привет, {user?.profile?.display_name || user?.email}! Управляйте своими 3D-моделями.
           </p>
         </div>
@@ -91,18 +91,21 @@ const AuthorCabinetPage = () => {
           { label: 'На проверке', value: models.filter(m => m.status === 'pending_review').length },
           { label: 'Загрузок', value: models.reduce((s, m) => s + (m.download_count || 0), 0) },
         ].map(stat => (
-          <div key={stat.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-            <div className="text-3xl font-bold text-blue-600">{stat.value}</div>
-            <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
+          <div key={stat.label} className="bg-slate-900 rounded-xl border border-slate-800 p-4 text-center">
+            <div className="text-3xl font-bold text-indigo-400">{stat.value}</div>
+            <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
           </div>
         ))}
       </div>
 
       {/* Список моделей */}
       {models.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
-          <div className="text-5xl mb-4">🧊</div>
-          <p className="text-gray-500 mb-4">У вас ещё нет 3D-моделей</p>
+        <div className="text-center py-16 bg-slate-900 rounded-2xl border border-dashed border-slate-700">
+          <svg viewBox="0 0 64 64" className="w-16 h-16 mx-auto mb-4 text-slate-700" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M32 6L58 20v24L32 58 6 44V20z" />
+            <path d="M32 6v52M6 20l26 14 26-14" />
+          </svg>
+          <p className="text-slate-500 mb-4">У вас ещё нет 3D-моделей</p>
           <Button as={Link} to="/author/models/new" variant="primary">
             Загрузить первую модель
           </Button>
@@ -110,25 +113,28 @@ const AuthorCabinetPage = () => {
       ) : (
         <div className="space-y-3">
           {models.map((model) => (
-            <div key={model.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4">
+            <div key={model.id} className="bg-slate-900 rounded-xl border border-slate-800 p-4 flex items-center gap-4 hover:border-slate-700 transition-colors">
               {/* Превью */}
-              <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-700">
                 {model.preview_image_url ? (
                   <img src={model.preview_image_url} alt={model.title} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-2xl">🧊</span>
+                  <svg viewBox="0 0 32 32" className="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M16 3L29 10v12L16 29 3 22V10z" />
+                    <path d="M16 3v26M3 10l13 7 13-7" />
+                  </svg>
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-gray-900 truncate">{model.title}</h3>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 flex-shrink-0">
+                  <h3 className="font-semibold text-white truncate">{model.title}</h3>
+                  <div className="flex items-center gap-1 text-xs text-slate-500 flex-shrink-0">
                     {STATUS_ICONS[model.status]}
                     {MODEL_STATUS_LABELS[model.status]}
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-gray-400">
+                <div className="flex items-center gap-4 text-xs text-slate-500">
                   <span className="flex items-center gap-1"><Download className="w-3 h-3" />{model.download_count || 0}</span>
                   <span className="flex items-center gap-1"><Star className="w-3 h-3 text-yellow-400" />{Number(model.rating_avg || 0).toFixed(1)}</span>
                   <span>{Number(model.price || 0).toLocaleString()} ₽</span>
@@ -139,7 +145,7 @@ const AuthorCabinetPage = () => {
                 {model.status === 'published' && (
                   <button
                     onClick={() => navigate(`/model/${model.id}`)}
-                    className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                    className="p-2 text-slate-500 hover:text-indigo-400 transition-colors"
                     title="Просмотр"
                   >
                     <Eye className="w-4 h-4" />
@@ -148,21 +154,21 @@ const AuthorCabinetPage = () => {
                 {model.status === 'draft' && (
                   <button
                     onClick={() => handleSubmitForReview(model.id)}
-                    className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                    className="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg font-medium transition-colors"
                   >
                     Отправить на проверку
                   </button>
                 )}
                 <button
                   onClick={() => navigate(`/author/models/${model.id}/edit`)}
-                  className="p-2 text-gray-400 hover:text-gray-700 transition-colors"
+                  className="p-2 text-slate-500 hover:text-slate-300 transition-colors"
                   title="Редактировать"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(model.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                  className="p-2 text-slate-500 hover:text-red-400 transition-colors"
                   title="Удалить"
                 >
                   <Trash2 className="w-4 h-4" />

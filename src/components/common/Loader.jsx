@@ -1,41 +1,32 @@
 import React from 'react'
 
-const Loader = ({ 
-  size = 'medium', 
-  color = 'black', 
+const Loader = ({
+  size       = 'medium',
+  color      = 'white',
   fullScreen = false,
-  text = ''
+  text       = '',
 }) => {
   const sizeClasses = {
-    small: 'w-6 h-6 border-2',
-    medium: 'w-10 h-10 border-3',
-    large: 'w-16 h-16 border-4'
+    small:  'w-5 h-5 border-2',
+    medium: 'w-9 h-9 border-2',
+    large:  'w-14 h-14 border-3',
   }
-
   const colorClasses = {
-    black: 'border-gray-200 border-t-black',
-    white: 'border-gray-400 border-t-white',
-    primary: 'border-gray-200 border-t-blue-600'
+    white:   'border-slate-700 border-t-white',
+    primary: 'border-slate-700 border-t-indigo-500',
+    black:   'border-slate-600 border-t-slate-200',
   }
 
   const spinner = (
-    <div className="flex flex-col items-center justify-center">
-      <div
-        className={`
-          ${sizeClasses[size]} 
-          ${colorClasses[color]} 
-          border-solid rounded-full animate-spin
-        `}
-      />
-      {text && (
-        <p className="mt-4 text-gray-600 text-sm font-medium">{text}</p>
-      )}
+    <div className="flex flex-col items-center justify-center gap-3">
+      <div className={`${sizeClasses[size]} ${colorClasses[color] || colorClasses.white} rounded-full animate-spin`} />
+      {text && <p className="text-slate-400 text-sm">{text}</p>}
     </div>
   )
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50">
         {spinner}
       </div>
     )
@@ -44,60 +35,41 @@ const Loader = ({
   return spinner
 }
 
-// Компонент скелетона для загрузки контента
-export const Skeleton = ({ className = '', ...props }) => {
-  return (
-    <div
-      className={`animate-pulse bg-gray-200 rounded ${className}`}
-      {...props}
-    />
-  )
-}
+export const Skeleton = ({ className = '', ...props }) => (
+  <div className={`animate-pulse bg-slate-800 rounded-xl ${className}`} {...props} />
+)
 
-// Компонент для загрузки списка товаров
-export const ProductSkeleton = () => {
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <Skeleton className="w-full h-64" />
-      <div className="p-4">
-        <Skeleton className="h-4 w-20 mb-2" />
-        <Skeleton className="h-6 w-full mb-2" />
-        <Skeleton className="h-8 w-24" />
-      </div>
+export const ProductSkeleton = () => (
+  <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+    <Skeleton className="w-full aspect-square" />
+    <div className="p-4 space-y-2">
+      <Skeleton className="h-3 w-16" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-8 w-24" />
     </div>
-  )
-}
+  </div>
+)
 
-// Компонент для загрузки списка
-export const ListSkeleton = ({ count = 3 }) => {
-  return (
-    <div className="space-y-4">
-      {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="flex items-center space-x-4">
-          <Skeleton className="h-20 w-20 rounded-lg" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
+export const ListSkeleton = ({ count = 3 }) => (
+  <div className="space-y-3">
+    {Array.from({ length: count }).map((_, i) => (
+      <div key={i} className="flex items-center gap-4">
+        <Skeleton className="h-16 w-16 rounded-xl flex-shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-3 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
         </div>
-      ))}
-    </div>
-  )
-}
+      </div>
+    ))}
+  </div>
+)
 
-// Компонент для загрузки текста
-export const TextSkeleton = ({ lines = 3 }) => {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: lines }).map((_, index) => (
-        <Skeleton
-          key={index}
-          className="h-4"
-          style={{ width: `${Math.random() * 40 + 60}%` }}
-        />
-      ))}
-    </div>
-  )
-}
+export const TextSkeleton = ({ lines = 3 }) => (
+  <div className="space-y-2">
+    {Array.from({ length: lines }).map((_, i) => (
+      <Skeleton key={i} className="h-3" style={{ width: `${Math.random() * 40 + 60}%` }} />
+    ))}
+  </div>
+)
 
 export default Loader

@@ -1,22 +1,25 @@
 import React, { useState } from 'react'
+import { Package, Download, ShieldCheck, ArrowRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useCartQuery } from '../hooks/useCartQuery'
 import { useClearCart } from '../hooks/useCartMutations'
 import { createOrder } from '../services/orders.service'
 import { useUserQuery } from '../hooks/useUserQuery'
-import { useNavigate } from 'react-router-dom'
-import { Package, Download, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+const fieldClass = `w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm
+  placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition`
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const { data: user, isLoading: authLoading } = useUserQuery()
   const { data: cartItems = [], isLoading: cartLoading } = useCartQuery()
   const clearCartMutation = useClearCart()
-  const [notes, setNotes] = useState('')
+  const [notes, setNotes]         = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [ordered, setOrdered] = useState(false)
+  const [ordered, setOrdered]     = useState(false)
 
-  const total = cartItems.reduce((sum, item) => sum + Number(item.price || 0), 0)
+  const total     = cartItems.reduce((sum, item) => sum + Number(item.price || 0), 0)
   const freeItems = cartItems.filter(item => item.is_free)
   const paidItems = cartItems.filter(item => !item.is_free)
 
@@ -25,9 +28,8 @@ export default function CheckoutPage() {
     if (cartItems.length === 0) return toast.error('Корзина пуста!')
     setSubmitting(true)
     try {
-      const { order, confirmation_url } = await createOrder({ notes })
+      const { confirmation_url } = await createOrder({ notes })
       await clearCartMutation.mutateAsync()
-
       if (confirmation_url) {
         toast.success('Заказ создан! Переходим к оплате...')
         window.location.href = confirmation_url
@@ -42,137 +44,137 @@ export default function CheckoutPage() {
     }
   }
 
-  if (authLoading || cartLoading) {
-    return <div className="max-w-3xl mx-auto px-4 py-8 text-gray-500">Загрузка...</div>
-  }
+  if (authLoading || cartLoading) return (
+    <div className="max-w-3xl mx-auto px-4 py-8 text-slate-500">Загрузка...</div>
+  )
 
-  if (!user) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col items-center justify-center text-gray-400">
-        <div className="text-xl mb-2">Войдите, чтобы оформить заказ</div>
+  if (!user) return (
+    <div className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center text-center text-slate-500">
+      <p className="text-lg mb-4">Войдите, чтобы оформить заказ</p>
+      <button
+        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition"
+        style={{ boxShadow: 'none' }}
+        onClick={() => navigate('/')}
+      >
+        На главную
+      </button>
+    </div>
+  )
+
+  if (ordered) return (
+    <div className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center text-center">
+      <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center mb-6">
+        <ShieldCheck className="w-10 h-10 text-emerald-400" />
+      </div>
+      <h1 className="text-3xl font-black text-white mb-3">Заказ оформлен!</h1>
+      <p className="text-slate-400 mb-8 max-w-sm">
+        {paidItems.length > 0
+          ? 'После подтверждения оплаты ссылки для скачивания появятся в разделе «Мои заказы».'
+          : 'Ссылки для скачивания доступны в разделе «Мои заказы».'}
+      </p>
+      <div className="flex gap-3">
         <button
-          className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
-          onClick={() => navigate('/')}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition"
+          style={{ boxShadow: 'none' }}
+          onClick={() => navigate('/orders')}
         >
-          На главную
+          Мои заказы <ArrowRight className="w-4 h-4" />
+        </button>
+        <button
+          className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-6 py-2.5 rounded-xl font-semibold text-sm transition"
+          style={{ boxShadow: 'none' }}
+          onClick={() => navigate('/catalog')}
+        >
+          В каталог
         </button>
       </div>
-    )
-  }
-
-  if (ordered) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center text-center">
-        <ShieldCheck className="w-20 h-20 text-green-500 mb-6" />
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">Заказ оформлен!</h1>
-        <p className="text-gray-500 mb-8">
-          {paidItems.length > 0
-            ? 'После подтверждения оплаты ссылки для скачивания появятся в разделе «Мои заказы».'
-            : 'Ссылки для скачивания доступны в разделе «Мои заказы».'}
-        </p>
-        <div className="flex gap-4">
-          <button
-            className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
-            onClick={() => navigate('/orders')}
-          >
-            Мои заказы
-          </button>
-          <button
-            className="border border-gray-300 text-gray-700 px-6 py-2 rounded-full font-semibold hover:bg-gray-50 transition"
-            onClick={() => navigate('/catalog')}
-          >
-            В каталог
-          </button>
-        </div>
-      </div>
-    )
-  }
+    </div>
+  )
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Оформление заказа</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white">Оформление заказа</h1>
+        <p className="text-slate-500 text-sm mt-1">Проверьте состав и подтвердите заказ</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Форма */}
-        <div>
-          <form className="bg-white rounded-xl shadow-sm border p-6 space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Комментарий (необязательно)</label>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Примечание к заказу..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                rows={3}
-              />
-            </div>
+        <form className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              Комментарий <span className="text-slate-600">(необязательно)</span>
+            </label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Примечание к заказу..."
+              className={`${fieldClass} resize-none`}
+              rows={3}
+            />
+          </div>
 
-            {/* Информация о доставке */}
-            <div className="bg-blue-50 rounded-lg p-4 space-y-2 text-sm text-blue-800">
-              <div className="flex items-center gap-2 font-semibold">
-                <Download className="w-4 h-4" />
-                Цифровая доставка
-              </div>
-              <ul className="list-disc list-inside space-y-1 text-blue-700">
-                <li>Бесплатные модели доступны сразу</li>
-                <li>Платные модели — после подтверждения оплаты</li>
-                <li>Ссылки действуют 72 часа</li>
-                <li>Лицензия генерируется автоматически</li>
-              </ul>
+          <div className="bg-indigo-500/5 border border-indigo-500/15 rounded-xl p-4 space-y-2 text-sm">
+            <div className="flex items-center gap-2 font-semibold text-indigo-400">
+              <Download className="w-4 h-4" /> Цифровая доставка
             </div>
+            <ul className="space-y-1 text-slate-500 text-xs list-disc list-inside">
+              <li>Бесплатные модели доступны сразу</li>
+              <li>Платные — после подтверждения оплаты</li>
+              <li>Ссылки действуют 72 часа</li>
+              <li>Лицензия генерируется автоматически</li>
+            </ul>
+          </div>
 
-            <button
-              type="submit"
-              disabled={submitting || cartItems.length === 0}
-              className="w-full bg-blue-600 text-white rounded-lg py-3 font-semibold text-base hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {submitting ? 'Оформление...' : 'Оформить заказ'}
-            </button>
-          </form>
-        </div>
+          <button
+            type="submit"
+            disabled={submitting || cartItems.length === 0}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-3.5 font-bold text-sm transition disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ boxShadow: 'none' }}
+          >
+            {submitting ? 'Оформление...' : 'Оформить заказ'}
+          </button>
+        </form>
 
         {/* Состав заказа */}
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900">Состав заказа</h2>
-
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h2 className="font-semibold text-white mb-4">Состав заказа</h2>
           {cartItems.length === 0 ? (
-            <div className="text-gray-400 text-center py-8">Корзина пуста</div>
+            <p className="text-slate-600 text-sm text-center py-8">Корзина пуста</p>
           ) : (
             <div className="space-y-3">
               {cartItems.map(item => (
                 <div key={item.model_id} className="flex items-center gap-3">
-                  {item.preview_image_url ? (
-                    <img src={item.preview_image_url} alt={item.title} className="w-12 h-12 rounded object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <Package className="w-6 h-6 text-gray-400" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">{item.title}</div>
-                    <div className="text-xs text-gray-500">{item.author_name || 'Автор'}</div>
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 flex-shrink-0">
-                    {item.is_free ? (
-                      <span className="text-green-600">Бесплатно</span>
+                  <div className="w-11 h-11 bg-slate-800 border border-slate-700 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {item.preview_image_url ? (
+                      <img src={item.preview_image_url} alt={item.title} className="w-full h-full object-contain p-1" />
                     ) : (
-                      `${Number(item.price).toLocaleString()} ₽`
+                      <Package className="w-5 h-5 text-slate-600" />
                     )}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{item.title}</p>
+                    <p className="text-xs text-slate-600">{item.author_name || 'Автор'}</p>
+                  </div>
+                  <p className="text-sm font-bold text-white flex-shrink-0">
+                    {item.is_free
+                      ? <span className="text-emerald-400">Бесплатно</span>
+                      : `${Number(item.price).toLocaleString()} ₽`
+                    }
+                  </p>
                 </div>
               ))}
-
-              <div className="border-t pt-3 mt-3">
+              <div className="border-t border-slate-800 pt-3 mt-1">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-900">Итого</span>
-                  <span className="text-xl font-bold text-gray-900">
+                  <span className="font-semibold text-slate-400">Итого</span>
+                  <span className="text-xl font-black text-white">
                     {total > 0 ? `${total.toLocaleString()} ₽` : 'Бесплатно'}
                   </span>
                 </div>
                 {freeItems.length > 0 && paidItems.length > 0 && (
-                  <div className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-slate-600 mt-1">
                     {freeItems.length} бесплатн. + {paidItems.length} платн.
-                  </div>
+                  </p>
                 )}
               </div>
             </div>

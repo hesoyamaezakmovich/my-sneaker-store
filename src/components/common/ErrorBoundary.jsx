@@ -26,8 +26,8 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
+          <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-md p-8 text-center">
             <div className="mb-4">
               <svg
                 className="mx-auto h-12 w-12 text-red-500"
@@ -44,37 +44,36 @@ class ErrorBoundary extends React.Component {
               </svg>
             </div>
             
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-white mb-2">
               Упс! Что-то пошло не так
             </h1>
-            
-            <p className="text-gray-600 mb-6">
+
+            <p className="text-slate-400 mb-6">
               Произошла непредвиденная ошибка. Мы уже работаем над её устранением.
             </p>
-            
+
             <div className="space-y-3">
               <button
                 onClick={() => window.location.reload()}
-                className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors"
+                className="w-full bg-indigo-600 text-white py-3 px-4 rounded-xl hover:bg-indigo-500 transition-colors"
               >
                 Обновить страницу
               </button>
-              
+
               <button
                 onClick={() => window.location.href = '/'}
-                className="w-full bg-white text-black py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                className="w-full bg-slate-800 text-slate-200 py-3 px-4 rounded-xl border border-slate-700 hover:bg-slate-700 transition-colors"
               >
                 Вернуться на главную
               </button>
             </div>
-            
-            {/* Показываем детали ошибки только в режиме разработки */}
+
             {import.meta.env.DEV && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                <summary className="cursor-pointer text-sm text-slate-500 hover:text-slate-300">
                   Детали ошибки (для разработчиков)
                 </summary>
-                <div className="mt-2 p-4 bg-red-50 rounded text-xs text-red-800 overflow-auto">
+                <div className="mt-2 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 overflow-auto">
                   <p className="font-semibold">{this.state.error.toString()}</p>
                   <pre className="mt-2 whitespace-pre-wrap">
                     {this.state.errorInfo?.componentStack}

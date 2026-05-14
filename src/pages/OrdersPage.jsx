@@ -1,30 +1,29 @@
 import React, { useEffect, useState } from 'react'
 import { fetchOrders, fetchDownloadLinks } from '../services/orders.service'
-import { Package, Download, ChevronDown, ChevronUp } from 'lucide-react'
+import { Package, Download, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useUserQuery } from '../hooks/useUserQuery'
 import toast from 'react-hot-toast'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '../utils/constants'
+import { ORDER_STATUS_LABELS } from '../utils/constants'
 
 const STATUS_BADGE = {
-  pending_payment: 'bg-yellow-100 text-yellow-700',
-  paid: 'bg-blue-100 text-blue-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-  refunded: 'bg-gray-100 text-gray-600',
+  pending_payment: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
+  paid:            'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
+  completed:       'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  cancelled:       'bg-red-500/10 text-red-400 border border-red-500/20',
+  refunded:        'bg-slate-700 text-slate-400 border border-slate-600',
 }
 
 export default function OrdersPage() {
   const { data: user, isLoading: authLoading } = useUserQuery()
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [orders, setOrders]               = useState([])
+  const [loading, setLoading]             = useState(true)
   const [expandedOrder, setExpandedOrder] = useState(null)
   const [downloadLinks, setDownloadLinks] = useState({})
   const navigate = useNavigate()
 
   useEffect(() => {
     if (!user) { setLoading(false); return }
-    setLoading(true)
     fetchOrders()
       .then(setOrders)
       .catch(() => toast.error('Ошибка загрузки заказов'))
@@ -36,18 +35,22 @@ export default function OrdersPage() {
     try {
       const files = await fetchDownloadLinks(licenseId)
       setDownloadLinks(prev => ({ ...prev, [licenseId]: files }))
-    } catch (e) {
-      toast.error(e.message)
-    }
+    } catch (e) { toast.error(e.message) }
   }
 
-  if (authLoading || loading) return <div className="max-w-3xl mx-auto px-4 py-8 text-gray-500">Загрузка...</div>
+  if (authLoading || loading) return (
+    <div className="max-w-3xl mx-auto px-4 py-8 text-slate-500">Загрузка...</div>
+  )
 
   if (!user) return (
-    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col items-center justify-center text-gray-400">
-      <Package className="w-16 h-16 mb-4" />
-      <div className="text-xl mb-2">Войдите, чтобы просматривать заказы</div>
-      <button className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition" onClick={() => navigate('/')}>
+    <div className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center text-center text-slate-500">
+      <Package className="w-14 h-14 mb-4 text-slate-700" />
+      <p className="text-lg mb-4">Войдите, чтобы просматривать заказы</p>
+      <button
+        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition"
+        style={{ boxShadow: 'none' }}
+        onClick={() => navigate('/')}
+      >
         На главную
       </button>
     </div>
@@ -55,68 +58,78 @@ export default function OrdersPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Мои заказы</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white">Мои заказы</h1>
+        <p className="text-slate-500 text-sm mt-1">История покупок и ссылки для скачивания</p>
+      </div>
 
       {orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-          <Package className="w-16 h-16 mb-4" />
-          <div className="text-xl mb-2">У вас пока нет заказов</div>
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-900 border border-slate-800 rounded-2xl text-center">
+          <Package className="w-14 h-14 text-slate-700 mb-4" />
+          <p className="text-slate-400 font-medium mb-1">У вас пока нет заказов</p>
+          <p className="text-slate-600 text-sm mb-6">Перейдите в каталог, чтобы купить 3D-модели</p>
           <button
-            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition"
+            style={{ boxShadow: 'none' }}
             onClick={() => navigate('/catalog')}
           >
-            В каталог
+            В каталог <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {orders.map(order => (
-            <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              {/* Заголовок заказа */}
+            <div key={order.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
               <button
-                className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between p-5 text-left hover:bg-slate-800/40 transition-colors"
+                style={{ boxShadow: 'none' }}
                 onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
               >
                 <div>
-                  <div className="font-semibold text-gray-900">Заказ №{order.order_number}</div>
-                  <div className="text-sm text-gray-500 mt-0.5">
+                  <p className="font-semibold text-white">Заказ №{order.order_number}</p>
+                  <p className="text-sm text-slate-500 mt-0.5">
                     {new Date(order.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </div>
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[order.status] || 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[order.status] || STATUS_BADGE.refunded}`}>
                     {ORDER_STATUS_LABELS[order.status] || order.status}
                   </span>
-                  <div className="font-bold text-gray-900">{Number(order.total_amount).toLocaleString()} ₽</div>
-                  {expandedOrder === order.id ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  <p className="font-bold text-white">{Number(order.total_amount).toLocaleString()} ₽</p>
+                  {expandedOrder === order.id
+                    ? <ChevronUp className="w-4 h-4 text-slate-500" />
+                    : <ChevronDown className="w-4 h-4 text-slate-500" />
+                  }
                 </div>
               </button>
 
-              {/* Позиции заказа */}
               {expandedOrder === order.id && order.items && (
-                <div className="border-t border-gray-100 p-5 space-y-3">
+                <div className="border-t border-slate-800 p-5 space-y-3">
                   {order.items.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 border border-slate-700">
                         {item.model_preview_url ? (
-                          <img src={item.model_preview_url} alt={item.model_title} className="w-full h-full object-cover rounded-lg" />
+                          <img src={item.model_preview_url} alt={item.model_title} className="w-full h-full object-cover rounded-xl" />
                         ) : (
-                          <span className="text-xl">🧊</span>
+                          <Package className="w-5 h-5 text-slate-600" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-gray-900 truncate">{item.model_title}</div>
+                        <p className="font-medium text-sm text-white truncate">{item.model_title}</p>
                         {item.license_key && (
-                          <div className="text-xs text-gray-400 font-mono">{item.license_key}</div>
+                          <p className="text-xs text-slate-600 font-mono mt-0.5">{item.license_key}</p>
                         )}
                       </div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {Number(item.price) === 0 ? 'Бесплатно' : `${Number(item.price).toLocaleString()} ₽`}
-                      </div>
+                      <p className="text-sm font-semibold text-white flex-shrink-0">
+                        {Number(item.price) === 0 ? (
+                          <span className="text-emerald-400">Бесплатно</span>
+                        ) : `${Number(item.price).toLocaleString()} ₽`}
+                      </p>
                       {item.license_id && (order.status === 'paid' || order.status === 'completed') && (
                         <button
                           onClick={() => handleGetDownloads(item.license_id)}
-                          className="flex items-center gap-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-medium transition-colors"
+                          className="flex items-center gap-1.5 text-xs bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 px-2.5 py-1.5 rounded-lg font-medium transition-colors"
+                          style={{ boxShadow: 'none' }}
                         >
                           <Download className="w-3.5 h-3.5" />
                           Скачать
@@ -125,23 +138,26 @@ export default function OrdersPage() {
                     </div>
                   ))}
 
-                  {/* Ссылки для скачивания */}
-                  {Object.entries(downloadLinks).filter(([licenseId]) => order.items?.some(i => i.license_id === licenseId)).map(([licenseId, files]) => (
-                    <div key={licenseId} className="bg-blue-50 rounded-lg p-3 mt-2">
-                      <div className="text-xs font-semibold text-blue-700 mb-2">Ссылки для скачивания (действительны 72 ч):</div>
-                      {files.map((file) => (
-                        <a
-                          key={file.file_id}
-                          href={file.download_url}
-                          download
-                          className="flex items-center gap-2 text-xs text-blue-600 hover:underline mb-1"
-                        >
-                          <Download className="w-3 h-3" />
-                          {file.file_name} ({file.file_format})
-                        </a>
-                      ))}
-                    </div>
-                  ))}
+                  {Object.entries(downloadLinks)
+                    .filter(([licenseId]) => order.items?.some(i => i.license_id === licenseId))
+                    .map(([licenseId, files]) => (
+                      <div key={licenseId} className="bg-indigo-500/5 border border-indigo-500/15 rounded-xl p-4 mt-2">
+                        <p className="text-xs font-semibold text-indigo-400 mb-2">
+                          Ссылки для скачивания (действительны 72 ч):
+                        </p>
+                        {files.map(file => (
+                          <a
+                            key={file.file_id}
+                            href={file.download_url}
+                            download
+                            className="flex items-center gap-2 text-xs text-indigo-400 hover:text-indigo-300 hover:underline mb-1 transition-colors"
+                          >
+                            <Download className="w-3 h-3" />
+                            {file.file_name} ({file.file_format})
+                          </a>
+                        ))}
+                      </div>
+                    ))}
                 </div>
               )}
             </div>

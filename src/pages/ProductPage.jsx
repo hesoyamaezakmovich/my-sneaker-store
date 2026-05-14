@@ -50,13 +50,13 @@ const ModelPage = () => {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="animate-pulse">
-          <div className="h-8 w-48 bg-gray-200 rounded mb-8" />
+          <div className="h-8 w-48 bg-slate-800 rounded mb-8" />
           <div className="flex gap-8">
-            <div className="w-1/2 aspect-square bg-gray-100 rounded-2xl" />
+            <div className="w-1/2 aspect-square bg-slate-800 rounded-2xl" />
             <div className="flex-1 space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-3/4" />
-              <div className="h-4 bg-gray-100 rounded w-1/2" />
-              <div className="h-24 bg-gray-100 rounded" />
+              <div className="h-8 bg-slate-800 rounded w-3/4" />
+              <div className="h-4 bg-slate-800/60 rounded w-1/2" />
+              <div className="h-24 bg-slate-800/60 rounded" />
             </div>
           </div>
         </div>
@@ -73,7 +73,7 @@ const ModelPage = () => {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-500 hover:text-gray-800 mb-6 text-sm"
+        className="flex items-center gap-2 text-slate-500 hover:text-white mb-6 text-sm transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Назад к каталогу
       </button>
@@ -81,11 +81,14 @@ const ModelPage = () => {
       <div className="flex flex-col lg:flex-row gap-10 mb-16">
         {/* Галерея */}
         <div className="flex-1">
-          <div className="bg-gray-50 rounded-2xl aspect-square flex items-center justify-center overflow-hidden mb-3 shadow">
+          <div className="bg-slate-800/50 rounded-2xl aspect-square flex items-center justify-center overflow-hidden mb-3 border border-slate-700/50">
             {primaryImage ? (
               <img src={primaryImage} alt={model.title} className="w-full h-full object-contain p-4" />
             ) : (
-              <div className="text-8xl text-gray-200">🧊</div>
+              <svg viewBox="0 0 64 64" className="w-24 h-24 text-slate-600" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M32 6L58 20v24L32 58 6 44V20z" />
+                <path d="M32 6v52M6 20l26 14 26-14" />
+              </svg>
             )}
           </div>
           {model.images?.length > 1 && (
@@ -95,7 +98,7 @@ const ModelPage = () => {
                   key={img.id}
                   onClick={() => setSelectedImage(img.image_url)}
                   className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedImage === img.image_url ? 'border-blue-500' : 'border-transparent'
+                    selectedImage === img.image_url ? 'border-indigo-500' : 'border-slate-700'
                   }`}
                 >
                   <img src={img.image_url} alt="" className="w-full h-full object-cover" />
@@ -108,17 +111,17 @@ const ModelPage = () => {
         {/* Детали */}
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+            <span className="text-sm text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
               {model.category_name || 'Без категории'}
             </span>
             {model.is_free && (
-              <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">Бесплатно</span>
+              <span className="text-sm font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Бесплатно</span>
             )}
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">{model.title}</h1>
+          <h1 className="text-3xl font-bold text-white mb-3">{model.title}</h1>
 
-          <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
+          <div className="flex items-center gap-4 mb-4 text-sm text-slate-400">
             <div className="flex items-center gap-1">
               <User className="w-4 h-4" />
               {model.author_name || model.author_email}
@@ -138,17 +141,17 @@ const ModelPage = () => {
           </div>
 
           {model.description && (
-            <p className="text-gray-600 mb-6 leading-relaxed">{model.description}</p>
+            <p className="text-slate-400 mb-6 leading-relaxed">{model.description}</p>
           )}
 
           {/* Характеристики */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-2 text-sm">
+          <div className="bg-slate-800/40 rounded-xl p-4 mb-6 space-y-2 text-sm border border-slate-700/50">
             {formats.length > 0 && (
               <div className="flex items-start gap-2">
-                <FileType className="w-4 h-4 text-gray-400 mt-0.5" />
+                <FileType className="w-4 h-4 text-slate-500 mt-0.5" />
                 <div>
-                  <span className="text-gray-500 mr-1">Форматы:</span>
-                  <span className="text-gray-800 font-medium">
+                  <span className="text-slate-500 mr-1">Форматы:</span>
+                  <span className="text-slate-200 font-medium">
                     {formats.map(f => MODEL_FORMAT_LABELS[f] || f).join(', ')}
                   </span>
                 </div>
@@ -156,20 +159,20 @@ const ModelPage = () => {
             )}
             {model.polygon_count && (
               <div className="flex items-center gap-2">
-                <span className="text-gray-500">Полигонов:</span>
-                <span className="text-gray-800 font-medium">{model.polygon_count.toLocaleString()}</span>
+                <span className="text-slate-500">Полигонов:</span>
+                <span className="text-slate-200 font-medium">{model.polygon_count.toLocaleString()}</span>
               </div>
             )}
             {model.software_used && (
               <div className="flex items-center gap-2">
-                <span className="text-gray-500">Программа:</span>
-                <span className="text-gray-800 font-medium">{model.software_used}</span>
+                <span className="text-slate-500">Программа:</span>
+                <span className="text-slate-200 font-medium">{model.software_used}</span>
               </div>
             )}
             {model.license_type && (
               <div className="flex items-center gap-2">
-                <span className="text-gray-500">Лицензия:</span>
-                <span className="text-gray-800 font-medium">{LICENSE_TYPE_LABELS[model.license_type] || model.license_type}</span>
+                <span className="text-slate-500">Лицензия:</span>
+                <span className="text-slate-200 font-medium">{LICENSE_TYPE_LABELS[model.license_type] || model.license_type}</span>
               </div>
             )}
           </div>
@@ -178,7 +181,7 @@ const ModelPage = () => {
           {model.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
               {model.tags.map(tag => (
-                <span key={tag.id} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
+                <span key={tag.id} className="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-1 rounded-full">
                   #{tag.name}
                 </span>
               ))}
@@ -187,7 +190,7 @@ const ModelPage = () => {
 
           {/* Цена и кнопки */}
           <div className="flex items-center gap-4 mb-4">
-            <div className="text-4xl font-extrabold text-gray-900">
+            <div className="text-4xl font-extrabold text-white">
               {model.is_free ? 'Бесплатно' : `${Number(model.price).toLocaleString()} ₽`}
             </div>
           </div>
@@ -205,7 +208,7 @@ const ModelPage = () => {
             </Button>
           </div>
 
-          <p className="text-xs text-gray-400 mt-3 text-center">
+          <p className="text-xs text-slate-500 mt-3 text-center">
             После оплаты ссылка для скачивания будет активна 72 часа
           </p>
         </div>
@@ -214,7 +217,7 @@ const ModelPage = () => {
       {/* Похожие модели */}
       {similar.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold mb-6 text-gray-900">Похожие модели</h2>
+          <h2 className="text-2xl font-bold mb-6 text-white">Похожие модели</h2>
           <ModelList models={similar} />
         </section>
       )}
