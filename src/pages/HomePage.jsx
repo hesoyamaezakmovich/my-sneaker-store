@@ -86,76 +86,128 @@ const CountUp = ({ target, suffix }) => {
   return <span ref={ref}>{count}{suffix}</span>
 }
 
-/* ─── CSS 3D Cube ─── */
-const Cube3D = () => (
-  <div className="relative flex items-center justify-center w-64 h-64">
-    {/* Glow orbs */}
-    <div className="absolute inset-8 bg-indigo-600/25 rounded-full blur-3xl animate-glow pointer-events-none" />
-    <div
-      className="absolute inset-14 bg-violet-600/20 rounded-full blur-2xl animate-glow pointer-events-none"
-      style={{ animationDelay: '1.5s' }}
-    />
+/* ─── CSS 3D Cube (draggable) ─── */
+const Cube3D = () => {
+  const wrapRef  = useRef(null)
+  const rotX     = useRef(18)
+  const rotY     = useRef(0)
+  const dragging = useRef(false)
+  const lastPos  = useRef({ x: 0, y: 0 })
+  const rafId    = useRef(null)
+  const [grab, setGrab] = useState(false)
 
-    {/* Perspective → fixed X tilt → Y rotation only */}
-    <div style={{ perspective: '600px' }}>
-      <div style={{ transformStyle: 'preserve-3d', transform: 'rotateX(18deg)' }}>
+  useEffect(() => {
+    const tick = () => {
+      if (!dragging.current) {
+        rotY.current += 0.3
+        if (wrapRef.current)
+          wrapRef.current.style.transform = `rotateX(${rotX.current}deg) rotateY(${rotY.current}deg)`
+      }
+      rafId.current = requestAnimationFrame(tick)
+    }
+    rafId.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId.current)
+  }, [])
+
+  const onPointerDown = (e) => {
+    dragging.current = true
+    setGrab(true)
+    lastPos.current = { x: e.clientX, y: e.clientY }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const onPointerMove = (e) => {
+    if (!dragging.current) return
+    const dx = e.clientX - lastPos.current.x
+    const dy = e.clientY - lastPos.current.y
+    lastPos.current = { x: e.clientX, y: e.clientY }
+    rotY.current += dx * 0.5
+    rotX.current = Math.max(-75, Math.min(75, rotX.current - dy * 0.5))
+    if (wrapRef.current)
+      wrapRef.current.style.transform = `rotateX(${rotX.current}deg) rotateY(${rotY.current}deg)`
+  }
+
+  const onPointerUp = () => {
+    dragging.current = false
+    setGrab(false)
+  }
+
+  return (
+    <div className="relative flex items-center justify-center w-64 h-64">
+      {/* Glow orbs */}
+      <div className="absolute inset-8 bg-indigo-600/25 rounded-full blur-3xl animate-glow pointer-events-none" />
+      <div
+        className="absolute inset-14 bg-violet-600/20 rounded-full blur-2xl animate-glow pointer-events-none"
+        style={{ animationDelay: '1.5s' }}
+      />
+
+      {/* Perspective container — drag target */}
+      <div
+        style={{ perspective: '600px', cursor: grab ? 'grabbing' : 'grab' }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+      >
         <div
-          className="relative w-32 h-32 animate-rotate-cube"
-          style={{ transformStyle: 'preserve-3d' }}
+          ref={wrapRef}
+          style={{ transformStyle: 'preserve-3d', transform: 'rotateX(18deg) rotateY(0deg)' }}
         >
-          {/* Front */}
-          <div
-            className="absolute inset-0 bg-slate-800/80 border border-indigo-500/60 flex items-center justify-center"
-            style={{ transform: 'translateZ(64px)' }}
-          >
-            <Box className="w-8 h-8 text-indigo-400/70" />
+          <div className="relative w-32 h-32" style={{ transformStyle: 'preserve-3d' }}>
+            {/* Front */}
+            <div
+              className="absolute inset-0 bg-slate-800/80 border border-indigo-500/60 flex items-center justify-center"
+              style={{ transform: 'translateZ(64px)' }}
+            >
+              <Box className="w-8 h-8 text-indigo-400/70" />
+            </div>
+            {/* Back */}
+            <div
+              className="absolute inset-0 bg-slate-900/80 border border-indigo-500/25"
+              style={{ transform: 'rotateY(180deg) translateZ(64px)' }}
+            />
+            {/* Right */}
+            <div
+              className="absolute inset-0 bg-slate-800/60 border border-violet-500/50"
+              style={{ transform: 'rotateY(90deg) translateZ(64px)' }}
+            />
+            {/* Left */}
+            <div
+              className="absolute inset-0 bg-slate-800/40 border border-violet-500/25"
+              style={{ transform: 'rotateY(-90deg) translateZ(64px)' }}
+            />
+            {/* Top */}
+            <div
+              className="absolute inset-0 bg-indigo-950/60 border border-indigo-400/50"
+              style={{ transform: 'rotateX(90deg) translateZ(64px)' }}
+            />
+            {/* Bottom */}
+            <div
+              className="absolute inset-0 bg-slate-950/80 border border-slate-600/30"
+              style={{ transform: 'rotateX(-90deg) translateZ(64px)' }}
+            />
           </div>
-          {/* Back */}
-          <div
-            className="absolute inset-0 bg-slate-900/80 border border-indigo-500/25"
-            style={{ transform: 'rotateY(180deg) translateZ(64px)' }}
-          />
-          {/* Right */}
-          <div
-            className="absolute inset-0 bg-slate-800/60 border border-violet-500/50"
-            style={{ transform: 'rotateY(90deg) translateZ(64px)' }}
-          />
-          {/* Left */}
-          <div
-            className="absolute inset-0 bg-slate-800/40 border border-violet-500/25"
-            style={{ transform: 'rotateY(-90deg) translateZ(64px)' }}
-          />
-          {/* Top */}
-          <div
-            className="absolute inset-0 bg-indigo-950/60 border border-indigo-400/50"
-            style={{ transform: 'rotateX(90deg) translateZ(64px)' }}
-          />
-          {/* Bottom */}
-          <div
-            className="absolute inset-0 bg-slate-950/80 border border-slate-600/30"
-            style={{ transform: 'rotateX(-90deg) translateZ(64px)' }}
-          />
         </div>
       </div>
-    </div>
 
-    {/* Floating format badges */}
-    {[
-      { label: '.OBJ',  cls: 'top-4 -right-8',        color: 'text-indigo-300', delay: '0s' },
-      { label: '.FBX',  cls: 'bottom-10 -left-10',     color: 'text-violet-300', delay: '1.4s' },
-      { label: '.GLTF', cls: 'bottom-4 right-2',       color: 'text-emerald-400', delay: '2.8s' },
-      { label: '.STL',  cls: 'top-1/2 -left-12 -translate-y-1/2', color: 'text-amber-400', delay: '0.7s' },
-    ].map(({ label, cls, color, delay }) => (
-      <div
-        key={label}
-        className={`absolute ${cls} bg-slate-800/90 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs font-bold ${color} animate-float shadow-lg backdrop-blur-sm`}
-        style={{ animationDelay: delay }}
-      >
-        {label}
-      </div>
-    ))}
-  </div>
-)
+      {/* Floating format badges */}
+      {[
+        { label: '.OBJ',  cls: 'top-4 -right-8',        color: 'text-indigo-300', delay: '0s' },
+        { label: '.FBX',  cls: 'bottom-10 -left-10',     color: 'text-violet-300', delay: '1.4s' },
+        { label: '.GLTF', cls: 'bottom-4 right-2',       color: 'text-emerald-400', delay: '2.8s' },
+        { label: '.STL',  cls: 'top-1/2 -left-12 -translate-y-1/2', color: 'text-amber-400', delay: '0.7s' },
+      ].map(({ label, cls, color, delay }) => (
+        <div
+          key={label}
+          className={`absolute ${cls} bg-slate-800/90 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs font-bold ${color} animate-float shadow-lg backdrop-blur-sm`}
+          style={{ animationDelay: delay }}
+        >
+          {label}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 /* ─── Page ─── */
 const HomePage = () => {

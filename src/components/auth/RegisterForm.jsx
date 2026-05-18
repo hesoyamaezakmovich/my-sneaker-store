@@ -21,7 +21,7 @@ const RegisterForm = ({ onSuccess, onSwitch }) => {
     setLoading(true)
     const { error } = await signUp(form.email, form.password, { first_name: form.first_name, last_name: form.last_name })
     setLoading(false)
-    if (error) setError('Ошибка регистрации. Попробуйте другой email.')
+    if (error) setError(error.message || 'Ошибка регистрации. Попробуйте другой email.')
     else if (onSuccess) onSuccess()
   }
 
