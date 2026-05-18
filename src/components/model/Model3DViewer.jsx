@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useLoader } from '@react-three/fiber'
-import { OrbitControls, Environment } from '@react-three/drei'
+import { OrbitControls, Environment, Center } from '@react-three/drei'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import * as THREE from 'three'
 import { X, RotateCcw, Box } from 'lucide-react'
@@ -23,21 +23,17 @@ const neutralMat = new THREE.MeshStandardMaterial({
 
 function FBXScene({ url }) {
   const fbx = useLoader(FBXLoader, url, loader => { loader.manager = noTexManager })
-  const ref = useRef()
 
-  useEffect(() => {
-    if (!ref.current) return
-
-    const box = new THREE.Box3().setFromObject(ref.current)
-    const center = box.getCenter(new THREE.Vector3())
+  // Вычисляем нормализующий масштаб по bbox до Center-а
+  const scale = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(fbx)
     const size = box.getSize(new THREE.Vector3())
     const maxDim = Math.max(size.x, size.y, size.z)
+    return maxDim > 0 ? 2 / maxDim : 1
+  }, [fbx])
 
-    ref.current.position.sub(center)
-    if (maxDim > 0) ref.current.scale.setScalar(2 / maxDim)
-
-    // Заменяем все материалы на нейтральный — избегаем 404 текстур и крэша WebGL
-    ref.current.traverse(child => {
+  useEffect(() => {
+    fbx.traverse(child => {
       if (child.isMesh) {
         child.material = neutralMat
         child.castShadow = true
@@ -46,7 +42,12 @@ function FBXScene({ url }) {
     })
   }, [fbx])
 
-  return <primitive ref={ref} object={fbx} />
+  // Center измеряет bbox масштабированного объекта и выставляет его точно по центру
+  return (
+    <Center>
+      <primitive object={fbx} scale={scale} />
+    </Center>
+  )
 }
 
 function LoadingFallback() {
