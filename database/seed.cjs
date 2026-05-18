@@ -1,6 +1,12 @@
 /**
  * Seed: тестовые данные для дипломного проекта РКС 3D Маркетплейс
- * Запуск на ВМ: node database/seed.cjs
+ *
+ * Порядок запуска:
+ *  1. node database/upload-polyhaven.cjs  ← скачивает реальные модели в бакет
+ *  2. node database/seed.cjs              ← заполняет БД с реальными URL
+ *
+ * Только seed без загрузки:
+ *  node database/seed.cjs
  *
  * Пользователи:
  *   admin@rks.ru     / Admin1234   (admin)
@@ -24,280 +30,247 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || '',
 })
 
-// Реальные фотографии через picsum (стабильный CDN, seed = всегда одна картинка)
-const img = (seed, w = 600, h = 400) =>
-  `https://picsum.photos/seed/${seed}/${w}/${h}`
-
-// Модели — 28 штук по всем категориям
+// Реальные модели с Polyhaven (CC0), загружены в cloud.ru бакет
 const MODELS = [
-  // ── Архитектура ──────────────────────────────────────────
+  // ── Interieur / Furniture ────────────────────────────────
   {
-    cat: 'architecture', author: 1,
-    title: 'Современный жилой дом',
-    desc: 'Детализированная модель современного многоквартирного дома. Включает PBR-текстуры, лопасти жалюзи, балконные ограждения. Готова к рендеру в Blender и 3ds Max.',
-    price: 1500, free: false, poly: 85000, sw: 'Blender', lic: 'standard',
-    dl: 42, views: 310, rating: 4.7, rc: 12, feat: true,
-    img1: img('arch1'), img2: img('arch1b', 600, 400),
+    cat: 'interior', author: 1,
+    title: 'Painted Wooden Chair 02',
+    desc: 'Антикварный деревянный стул с потёртой краской. PBR-текстуры, CC0 лицензия.',
+    price: 0, free: true, poly: 12000, sw: 'Blender', lic: 'free',
+    dl: 234, views: 1820, rating: 4.5, rc: 31, feat: true,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/painted_wooden_chair_02.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/painted_wooden_chair_02.fbx',
+    modelExt: 'fbx',
     tags: ['pbr', 'textures-included', 'realistic'],
   },
+  // ── Nature / Plants ──────────────────────────────────────
   {
-    cat: 'architecture', author: 1,
-    title: 'Средневековый замок',
-    desc: 'Детализированный замок с башнями, рвом и подъёмным мостом. Отличная основа для RPG и исторических визуализаций.',
-    price: 2800, free: false, poly: 210000, sw: 'Blender', lic: 'extended',
-    dl: 18, views: 195, rating: 4.9, rc: 7, feat: true,
-    img1: img('castle1'), img2: img('castle2'),
-    tags: ['high-poly', 'textures-included', 'fantasy'],
-  },
-  {
-    cat: 'architecture', author: 2,
-    title: 'Японский храм',
-    desc: 'Традиционный синтоистский храм с тории, каменными фонарями и садом камней. Полный набор PBR-материалов.',
-    price: 3400, free: false, poly: 145000, sw: 'Blender', lic: 'extended',
-    dl: 31, views: 540, rating: 4.8, rc: 15, feat: true,
-    img1: img('temple1'), img2: img('temple2'),
-    tags: ['high-poly', 'pbr', 'realistic', 'textures-included'],
-  },
-  {
-    cat: 'architecture', author: 1,
-    title: 'Минималистичный коттедж',
-    desc: 'Одноэтажный дом в стиле современного минимализма. Low-poly, оптимизирован для игровых движков.',
-    price: 0, free: true, poly: 14000, sw: 'Blender', lic: 'free',
-    dl: 387, views: 2800, rating: 4.4, rc: 52, feat: false,
-    img1: img('house1'), img2: img('house2'),
+    cat: 'nature', author: 2,
+    title: 'Fir Sapling Medium',
+    desc: 'Молодая ель с реалистичной хвоей. Отличная основа для лесных сцен.',
+    price: 0, free: true, poly: 8500, sw: 'Blender', lic: 'free',
+    dl: 512, views: 4300, rating: 4.4, rc: 67, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/fir_sapling_medium.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/fir_sapling_medium.fbx',
+    modelExt: 'fbx',
     tags: ['low-poly', 'game-ready', 'realtime'],
   },
-  {
-    cat: 'architecture', author: 2,
-    title: 'Небоскрёб бизнес-центр',
-    desc: '40-этажный стеклянный небоскрёб с детализированным лобби и паркингом. Подходит для архитектурных презентаций.',
-    price: 5200, free: false, poly: 290000, sw: '3ds Max', lic: 'extended',
-    dl: 9, views: 210, rating: 4.6, rc: 4, feat: false,
-    img1: img('skyscraper1'), img2: img('skyscraper2'),
-    tags: ['high-poly', 'pbr', 'realistic'],
-  },
-
-  // ── Персонажи ────────────────────────────────────────────
-  {
-    cat: 'characters', author: 2,
-    title: 'Рыцарь в доспехах',
-    desc: 'Полностью зариггированный рыцарь с анимациями ходьбы, атаки и смерти. Готов к Unreal Engine 5 и Unity.',
-    price: 3800, free: false, poly: 68000, sw: 'Maya', lic: 'standard',
-    dl: 89, views: 1240, rating: 4.9, rc: 24, feat: true,
-    img1: img('knight1'), img2: img('knight2'),
-    tags: ['rigged', 'animated', 'game-ready', 'pbr'],
-  },
-  {
-    cat: 'characters', author: 2,
-    title: 'Мультяшный котёнок',
-    desc: 'Милый мультяшный персонаж для детских игр. 5 базовых анимаций: бег, прыжок, сидение, сон, победа.',
-    price: 1200, free: false, poly: 8500, sw: 'Blender', lic: 'standard',
-    dl: 156, views: 2100, rating: 4.6, rc: 43, feat: false,
-    img1: img('cat1'), img2: img('cat2'),
-    tags: ['rigged', 'animated', 'cartoon', 'game-ready'],
-  },
-  {
-    cat: 'characters', author: 2,
-    title: 'Научный работник (NPC)',
-    desc: 'Персонаж учёного в белом халате. Риггинг совместим с Mixamo, 12 готовых анимаций в комплекте.',
-    price: 2100, free: false, poly: 42000, sw: 'Maya', lic: 'standard',
-    dl: 34, views: 480, rating: 4.2, rc: 8, feat: false,
-    img1: img('scientist1'), img2: img('scientist2'),
-    tags: ['rigged', 'game-ready', 'realistic'],
-  },
-  {
-    cat: 'characters', author: 1,
-    title: 'Солдат спецназа',
-    desc: 'Высокодетализированный боец SWAT с полным снаряжением. Тактический жилет, шлем, оружие — всё отдельными мешами.',
-    price: 4200, free: false, poly: 95000, sw: 'Maya', lic: 'extended',
-    dl: 61, views: 980, rating: 4.8, rc: 18, feat: true,
-    img1: img('soldier1'), img2: img('soldier2'),
-    tags: ['rigged', 'animated', 'pbr', 'game-ready', 'realistic'],
-  },
-  {
-    cat: 'characters', author: 2,
-    title: 'Базовый женский персонаж',
-    desc: 'Универсальная женская base mesh с корректными пропорциями. Идеальна как основа для собственных персонажей.',
-    price: 0, free: true, poly: 22000, sw: 'Blender', lic: 'free',
-    dl: 612, views: 5400, rating: 4.5, rc: 84, feat: false,
-    img1: img('female1'), img2: img('female2'),
-    tags: ['rigged', 'realistic'],
-  },
-
-  // ── Транспорт ────────────────────────────────────────────
-  {
-    cat: 'transport', author: 1,
-    title: 'Спортивный автомобиль 2024',
-    desc: 'Высокодетализированный спорткар. Открываются двери, капот, багажник. PBR-текстуры 4K, настраиваемый цвет кузова.',
-    price: 4500, free: false, poly: 320000, sw: '3ds Max', lic: 'extended',
-    dl: 63, views: 870, rating: 4.8, rc: 19, feat: true,
-    img1: img('car1'), img2: img('car2'),
-    tags: ['high-poly', 'pbr', 'realistic'],
-  },
-  {
-    cat: 'transport', author: 1,
-    title: 'Военный вертолёт',
-    desc: 'Ударный вертолёт с вращающимися лопастями. Готов к анимации и игровым сценам. Включает LOD-версию.',
-    price: 3600, free: false, poly: 180000, sw: '3ds Max', lic: 'standard',
-    dl: 27, views: 440, rating: 4.6, rc: 11, feat: false,
-    img1: img('helicopter1'), img2: img('helicopter2'),
-    tags: ['animated', 'pbr', 'game-ready'],
-  },
-  {
-    cat: 'transport', author: 2,
-    title: 'Городской автобус',
-    desc: 'Современный городской автобус с интерьером. Открываются двери, складываются пандусы. Отличный выбор для городских симуляторов.',
-    price: 2200, free: false, poly: 95000, sw: 'Blender', lic: 'standard',
-    dl: 44, views: 620, rating: 4.3, rc: 13, feat: false,
-    img1: img('bus1'), img2: img('bus2'),
-    tags: ['animated', 'pbr', 'realistic'],
-  },
-  {
-    cat: 'transport', author: 1,
-    title: 'Мотоцикл-чоппер',
-    desc: 'Классический чоппер в стиле 70-х. Хромированные детали, кожаное сиденье, кастомные выхлопные трубы.',
-    price: 0, free: true, poly: 38000, sw: 'Blender', lic: 'free',
-    dl: 291, views: 2100, rating: 4.7, rc: 37, feat: false,
-    img1: img('moto1'), img2: img('moto2'),
-    tags: ['pbr', 'textures-included', 'realistic'],
-  },
-
-  // ── Природа ──────────────────────────────────────────────
-  {
-    cat: 'nature', author: 2,
-    title: 'Пак тропических деревьев',
-    desc: '15 уникальных тропических деревьев с wind-анимацией. Оптимизировано для реального времени, Billboard LOD в комплекте.',
-    price: 0, free: true, poly: 4200, sw: 'Blender', lic: 'free',
-    dl: 512, views: 4300, rating: 4.4, rc: 67, feat: false,
-    img1: img('trees1'), img2: img('trees2'),
-    tags: ['low-poly', 'game-ready', 'realtime', 'textures-included'],
-  },
-  {
-    cat: 'nature', author: 2,
-    title: 'Скалистый горный ландшафт',
-    desc: 'Детализированный горный рельеф 2×2 км. Включает снег, камни, траву и шейдер смешивания текстур.',
-    price: 2800, free: false, poly: 65000, sw: 'Blender', lic: 'standard',
-    dl: 33, views: 560, rating: 4.7, rc: 14, feat: false,
-    img1: img('mountain1'), img2: img('mountain2'),
-    tags: ['pbr', 'textures-included', 'realistic'],
-  },
-  {
-    cat: 'nature', author: 1,
-    title: 'Морские кораллы и водоросли',
-    desc: 'Набор из 20 коралловых элементов и 8 видов водорослей. Идеально для подводных сцен. Прозрачные шейдеры включены.',
-    price: 1600, free: false, poly: 28000, sw: 'Blender', lic: 'standard',
-    dl: 57, views: 740, rating: 4.5, rc: 16, feat: false,
-    img1: img('coral1'), img2: img('coral2'),
-    tags: ['pbr', 'textures-included', 'realtime'],
-  },
-
-  // ── Интерьер ─────────────────────────────────────────────
-  {
-    cat: 'interior', author: 1,
-    title: 'Скандинавский диван',
-    desc: 'Минималистичный диван в скандинавском стиле. 6 вариантов цвета ткани, съёмные подушки отдельными объектами.',
-    price: 0, free: true, poly: 12000, sw: 'Blender', lic: 'free',
-    dl: 234, views: 1820, rating: 4.3, rc: 31, feat: false,
-    img1: img('sofa1'), img2: img('sofa2'),
-    tags: ['low-poly', 'textures-included', 'realtime'],
-  },
-  {
-    cat: 'interior', author: 2,
-    title: 'Полный набор кухни',
-    desc: 'Фотореалистичный кухонный гарнитур: шкафы, столешница, встроенная техника, посуда. 47 отдельных объектов.',
-    price: 3100, free: false, poly: 120000, sw: 'Blender', lic: 'standard',
-    dl: 28, views: 490, rating: 4.8, rc: 9, feat: true,
-    img1: img('kitchen1'), img2: img('kitchen2'),
-    tags: ['high-poly', 'pbr', 'textures-included', 'realistic'],
-  },
-  {
-    cat: 'interior', author: 1,
-    title: 'Офисный стол геймера',
-    desc: 'Игровая рабочая станция с подсветкой RGB. Монитор, клавиатура, мышь, наушники — всё в комплекте с PBR-материалами.',
-    price: 900, free: false, poly: 34000, sw: 'Blender', lic: 'standard',
-    dl: 118, views: 1430, rating: 4.6, rc: 27, feat: false,
-    img1: img('desk1'), img2: img('desk2'),
-    tags: ['pbr', 'textures-included', 'realtime', 'game-ready'],
-  },
-
-  // ── Техника ──────────────────────────────────────────────
-  {
-    cat: 'tech', author: 1,
-    title: 'Промышленный робот',
-    desc: 'Роботизированная рука для производственной линии. Полный риггинг, 6 степеней свободы, базовые анимации захвата.',
-    price: 3200, free: false, poly: 45000, sw: '3ds Max', lic: 'standard',
-    dl: 27, views: 420, rating: 4.5, rc: 9, feat: false,
-    img1: img('robot1'), img2: img('robot2'),
-    tags: ['rigged', 'animated', 'pbr'],
-  },
-  {
-    cat: 'tech', author: 2,
-    title: 'Боевой дрон',
-    desc: 'Квадрокоптер военного класса с вращающимися пропеллерами. Анимация взлёта и зависания. Готов к использованию в играх.',
-    price: 2600, free: false, poly: 52000, sw: 'Blender', lic: 'standard',
-    dl: 45, views: 680, rating: 4.7, rc: 14, feat: false,
-    img1: img('drone1'), img2: img('drone2'),
-    tags: ['animated', 'pbr', 'game-ready', 'sci-fi'],
-  },
-  {
-    cat: 'tech', author: 1,
-    title: 'Серверная стойка',
-    desc: '42U серверная стойка с 12 серверами, кабельной разводкой и патч-панелью. Идеально для sci-fi интерьеров и визуализаций ЦОД.',
-    price: 1400, free: false, poly: 67000, sw: '3ds Max', lic: 'standard',
-    dl: 39, views: 510, rating: 4.4, rc: 11, feat: false,
-    img1: img('server1'), img2: img('server2'),
-    tags: ['pbr', 'textures-included', 'sci-fi'],
-  },
-
-  // ── Оружие ───────────────────────────────────────────────
-  {
-    cat: 'weapons', author: 2,
-    title: 'Фэнтезийный меч',
-    desc: 'Двуручный меч с магическими рунами. PBR-текстуры, emission map для эффекта свечения, 4K разрешение карт.',
-    price: 800, free: false, poly: 6400, sw: 'Blender', lic: 'standard',
-    dl: 201, views: 1560, rating: 4.7, rc: 38, feat: false,
-    img1: img('sword1'), img2: img('sword2'),
-    tags: ['pbr', 'textures-included', 'fantasy', 'game-ready'],
-  },
-  {
-    cat: 'weapons', author: 1,
-    title: 'Тактический автомат',
-    desc: 'Современный штурмовой карабин с съёмными обвесами: прицел, глушитель, фонарь, цевьё. FPS-ready, все детали отдельно.',
-    price: 1800, free: false, poly: 48000, sw: '3ds Max', lic: 'extended',
-    dl: 134, views: 1900, rating: 4.8, rc: 32, feat: true,
-    img1: img('rifle1'), img2: img('rifle2'),
-    tags: ['pbr', 'game-ready', 'realistic', 'textures-included'],
-  },
-
-  // ── Еда ──────────────────────────────────────────────────
-  {
-    cat: 'food', author: 2,
-    title: 'Пак японской кухни',
-    desc: 'Суши, роллы, рамен, темпура — 18 готовых блюд с фотореалистичными текстурами. Идеально для рекламных визуализаций.',
-    price: 1200, free: false, poly: 35000, sw: 'Blender', lic: 'standard',
-    dl: 76, views: 1100, rating: 4.6, rc: 22, feat: false,
-    img1: img('food1'), img2: img('food2'),
-    tags: ['pbr', 'textures-included', 'realistic'],
-  },
-  {
-    cat: 'food', author: 1,
-    title: 'Пекарня: хлеб и выпечка',
-    desc: '24 вида хлеба, булочек и пирогов с детализированной корочкой и мякишью. Процедурные шейдеры в комплекте.',
-    price: 0, free: true, poly: 18000, sw: 'Blender', lic: 'free',
-    dl: 445, views: 3200, rating: 4.5, rc: 58, feat: false,
-    img1: img('bread1'), img2: img('bread2'),
-    tags: ['pbr', 'textures-included'],
-  },
-
-  // ── Абстракция ───────────────────────────────────────────
+  // ── Props / Abstract ─────────────────────────────────────
   {
     cat: 'abstract', author: 1,
-    title: 'Кристаллическая структура',
-    desc: 'Абстрактная кристаллическая форма с процедурными материалами. Параметры настраиваются через geometry nodes.',
-    price: 650, free: false, poly: 3200, sw: 'Blender', lic: 'standard',
+    title: 'Megaphone 01',
+    desc: 'Детализированный мегафон с пластиковым корпусом и металлической решёткой.',
+    price: 650, free: false, poly: 6200, sw: 'Blender', lic: 'standard',
     dl: 88, views: 720, rating: 4.3, rc: 17, feat: false,
-    img1: img('crystal1'), img2: img('crystal2'),
-    tags: ['pbr'],
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/Megaphone_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/Megaphone_01.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included'],
+  },
+  // ── Architecture ─────────────────────────────────────────
+  {
+    cat: 'architecture', author: 1,
+    title: 'Large Castle Door',
+    desc: 'Массивные ворота средневекового замка с окованием и петлями. Готово к анимации.',
+    price: 2800, free: false, poly: 45000, sw: 'Blender', lic: 'extended',
+    dl: 18, views: 195, rating: 4.9, rc: 7, feat: true,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/large_castle_door.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/large_castle_door.fbx',
+    modelExt: 'fbx',
+    tags: ['high-poly', 'textures-included', 'fantasy'],
+  },
+  // ── Nature / Grass ───────────────────────────────────────
+  {
+    cat: 'nature', author: 2,
+    title: 'Grass Medium 01',
+    desc: 'Реалистичная трава средней высоты. Оптимизирована для игровых движков.',
+    price: 0, free: true, poly: 3200, sw: 'Blender', lic: 'free',
+    dl: 387, views: 2800, rating: 4.4, rc: 52, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/grass_medium_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/grass_medium_01.fbx',
+    modelExt: 'fbx',
+    tags: ['low-poly', 'game-ready', 'realtime', 'textures-included'],
+  },
+  // ── Tech / Electronics ───────────────────────────────────
+  {
+    cat: 'tech', author: 1,
+    title: 'Electric Stove',
+    desc: 'Современная электрическая плита с 4 конфорками. Высокодетализированная кухонная техника.',
+    price: 1400, free: false, poly: 34000, sw: 'Blender', lic: 'standard',
+    dl: 39, views: 510, rating: 4.4, rc: 11, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/electric_stove.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/electric_stove.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Interior / Lighting ──────────────────────────────────
+  {
+    cat: 'interior', author: 2,
+    title: 'Lantern 01',
+    desc: 'Антикварный металлический фонарь со стеклянными панелями. Подходит для исторических сцен.',
+    price: 800, free: false, poly: 8200, sw: 'Blender', lic: 'standard',
+    dl: 201, views: 1560, rating: 4.7, rc: 38, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/Lantern_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/Lantern_01.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'fantasy'],
+  },
+  // ── Nature / Trees ───────────────────────────────────────
+  {
+    cat: 'nature', author: 2,
+    title: 'Jacaranda Tree',
+    desc: 'Пышная жакаранда с яркими фиолетовыми цветами. Идеально для тропических сцен.',
+    price: 1600, free: false, poly: 28000, sw: 'Blender', lic: 'standard',
+    dl: 57, views: 740, rating: 4.5, rc: 16, feat: true,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/jacaranda_tree.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/jacaranda_tree.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Interior / Furniture ─────────────────────────────────
+  {
+    cat: 'interior', author: 1,
+    title: 'Gothic Bed 01',
+    desc: 'Кровать в готическом стиле с деревянным балдахином и богатой резьбой.',
+    price: 3100, free: false, poly: 95000, sw: 'Blender', lic: 'standard',
+    dl: 28, views: 490, rating: 4.8, rc: 9, feat: true,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/GothicBed_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/GothicBed_01.fbx',
+    modelExt: 'fbx',
+    tags: ['high-poly', 'pbr', 'textures-included', 'realistic'],
+  },
+  // ── Interior / Chandelier ────────────────────────────────
+  {
+    cat: 'interior', author: 2,
+    title: 'Chandelier 02',
+    desc: 'Элегантная люстра с хрустальными подвесками. Металлический каркас с позолотой.',
+    price: 900, free: false, poly: 22000, sw: 'Blender', lic: 'standard',
+    dl: 118, views: 1430, rating: 4.6, rc: 27, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/Chandelier_02.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/Chandelier_02.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Food ─────────────────────────────────────────────────
+  {
+    cat: 'food', author: 2,
+    title: 'Asian Pears',
+    desc: 'Фотореалистичные азиатские груши с детализированной кожурой.',
+    price: 0, free: true, poly: 18000, sw: 'Blender', lic: 'free',
+    dl: 445, views: 3200, rating: 4.5, rc: 58, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/food_pears_asian_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/food_pears_asian_01.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Abstract / Decorative ────────────────────────────────
+  {
+    cat: 'abstract', author: 1,
+    title: 'Lambis Shell',
+    desc: 'Детализированная раковина ламбиса с органической формой. Идеально для морских сцен.',
+    price: 650, free: false, poly: 12000, sw: 'Blender', lic: 'standard',
+    dl: 88, views: 720, rating: 4.3, rc: 17, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/lambis_shell.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/lambis_shell.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included'],
+  },
+  // ── Interior / Nightstand ────────────────────────────────
+  {
+    cat: 'interior', author: 2,
+    title: 'Classic Nightstand 01',
+    desc: 'Классическая прикроватная тумбочка в викторианском стиле с выдвижными ящиками.',
+    price: 1200, free: false, poly: 15000, sw: 'Blender', lic: 'standard',
+    dl: 156, views: 2100, rating: 4.6, rc: 43, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/ClassicNightstand_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/ClassicNightstand_01.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Tech / Tools ─────────────────────────────────────────
+  {
+    cat: 'tech', author: 1,
+    title: 'Hand Plane No4',
+    desc: 'Старинный столярный рубанок №4. Металлический корпус с деревянной ручкой, детали крепления.',
+    price: 1800, free: false, poly: 24000, sw: 'Blender', lic: 'standard',
+    dl: 134, views: 1900, rating: 4.8, rc: 32, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/hand_plane_no4.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/hand_plane_no4.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Interior / Chandelier 2 ──────────────────────────────
+  {
+    cat: 'interior', author: 2,
+    title: 'Chandelier 03',
+    desc: 'Современная подвесная люстра с LED-лентами. Минималистичный дизайн.',
+    price: 2100, free: false, poly: 18000, sw: 'Blender', lic: 'standard',
+    dl: 34, views: 480, rating: 4.2, rc: 8, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/Chandelier_03.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/Chandelier_03.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Interior / Table ─────────────────────────────────────
+  {
+    cat: 'interior', author: 1,
+    title: 'Wooden Table 01',
+    desc: 'Классический деревянный стол школьного типа. Деревянная столешница на металлических ножках.',
+    price: 0, free: true, poly: 8000, sw: 'Blender', lic: 'free',
+    dl: 291, views: 2100, rating: 4.7, rc: 37, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/WoodenTable_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/WoodenTable_01.fbx',
+    modelExt: 'fbx',
+    tags: ['low-poly', 'game-ready', 'realtime'],
+  },
+  // ── Transport / Ships ────────────────────────────────────
+  {
+    cat: 'transport', author: 1,
+    title: 'Dutch Ship Large 02',
+    desc: 'Большой голландский парусный корабль XVII века. Детализированный такелаж и надводная часть.',
+    price: 4500, free: false, poly: 180000, sw: 'Blender', lic: 'extended',
+    dl: 63, views: 870, rating: 4.8, rc: 19, feat: true,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/dutch_ship_large_02.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/dutch_ship_large_02.fbx',
+    modelExt: 'fbx',
+    tags: ['high-poly', 'pbr', 'realistic'],
+  },
+  // ── Tech / Props ─────────────────────────────────────────
+  {
+    cat: 'tech', author: 2,
+    title: 'Alarm Clock 01',
+    desc: 'Классический механический будильник с двумя звонками. Детализированный циферблат и заводной ключ.',
+    price: 2600, free: false, poly: 16000, sw: 'Blender', lic: 'standard',
+    dl: 45, views: 680, rating: 4.7, rc: 14, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/alarm_clock_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/alarm_clock_01.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Interior / Console ───────────────────────────────────
+  {
+    cat: 'interior', author: 1,
+    title: 'Classic Console 01',
+    desc: 'Классическая консольная тумба в готическом стиле. Дерево с резными деталями.',
+    price: 3200, free: false, poly: 42000, sw: 'Blender', lic: 'standard',
+    dl: 27, views: 420, rating: 4.5, rc: 9, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/ClassicConsole_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/ClassicConsole_01.fbx',
+    modelExt: 'fbx',
+    tags: ['pbr', 'textures-included', 'realistic'],
+  },
+  // ── Abstract / Industrial ────────────────────────────────
+  {
+    cat: 'abstract', author: 2,
+    title: 'Barrel 01',
+    desc: 'Металлическая промышленная бочка. Универсальный реквизит для игровых сцен.',
+    price: 0, free: true, poly: 3200, sw: 'Blender', lic: 'free',
+    dl: 612, views: 5400, rating: 4.5, rc: 84, feat: false,
+    img1: 'https://s3.cloud.ru/bucket-24661a/previews/Barrel_01.png',
+    modelUrl: 'https://s3.cloud.ru/bucket-24661a/models/Barrel_01.fbx',
+    modelExt: 'fbx',
+    tags: ['low-poly', 'game-ready', 'realtime'],
   },
 ]
 
@@ -384,7 +357,7 @@ async function seed () {
           id, authorId, catMap[m.cat] || null,
           m.title, m.desc, m.price, m.free,
           m.poly, m.sw, m.lic,
-          m.img1, img(m.img1.split('/').pop(), 300, 200),
+          m.img1, m.img1,
           m.dl, m.views, m.rating, m.rc, m.feat || false,
         ]
       )
@@ -394,21 +367,17 @@ async function seed () {
         `INSERT INTO model_images (model_id, image_url, is_primary, sort_order) VALUES ($1,$2,TRUE,0)`,
         [id, m.img1]
       )
-      await client.query(
-        `INSERT INTO model_images (model_id, image_url, is_primary, sort_order) VALUES ($1,$2,FALSE,1)`,
-        [id, m.img2]
-      )
 
       // Файл
-      const ext = m.sw === '3ds Max' ? 'max' : m.sw === 'Maya' ? 'ma' : 'blend'
+      const fileExt = m.modelExt || 'fbx'
       await client.query(
         `INSERT INTO model_files (model_id, file_name, file_path, file_format, file_size_bytes, is_primary)
          VALUES ($1,$2,$3,$4,$5,TRUE)`,
         [
           id,
-          `${m.title.replace(/\s+/g, '_')}.${ext}`,
-          `/models/${id}/main.${ext}`,
-          ext === 'blend' ? 'BLEND' : ext === 'max' ? 'MAX' : 'MAYA',
+          `${m.title.replace(/\s+/g, '_')}.${fileExt}`,
+          m.modelUrl || `/models/${id}/main.${fileExt}`,
+          fileExt.toUpperCase(),
           (Math.floor(Math.random() * 80) + 10) * 1024 * 1024,
         ]
       )
@@ -430,16 +399,16 @@ async function seed () {
     console.log('⭐ Добавляем отзывы...')
     const reviewsRaw = [
       [0,  b1Id, 5, 'Отличная модель! Очень детализированная, текстуры высокого качества. Сразу подошла для моего проекта.'],
-      [0,  b2Id, 4, 'Хорошая работа, но хотелось бы больше вариантов фасадов. В целом доволен покупкой.'],
-      [1,  b1Id, 5, 'Потрясающий замок! Работа заслуживает наивысшей оценки. Куплю ещё модели автора.'],
-      [2,  b2Id, 5, 'Японский храм просто идеален. Детализация невероятная, материалы работают из коробки.'],
-      [5,  b1Id, 5, 'Идеальный рыцарь для моего проекта, все анимации плавные и качественные.'],
-      [6,  b2Id, 4, 'Котёнок просто прелесть 😊 Анимации плавные, рекомендую!'],
-      [8,  b1Id, 5, 'Лучший персонаж-солдат что я видел. Купил сразу — не пожалел.'],
-      [10, b2Id, 5, 'Лучший автомобиль на платформе. Детали просто потрясающие, 4K текстуры огонь.'],
-      [18, b1Id, 5, 'Набор кухни очень детализирован. Сэкономил кучу времени на проекте.'],
-      [23, b2Id, 5, 'Тактический автомат — лучшая покупка этого месяца. FPS-проект выглядит профессионально.'],
-      [22, b1Id, 5, 'Меч с рунами выглядит потрясающе в игре. Эффект свечения настроен идеально.'],
+      [0,  b2Id, 4, 'Хорошая работа, хотелось бы больше вариантов. В целом доволен покупкой.'],
+      [3,  b1Id, 5, 'Потрясающие ворота замка! Работа заслуживает наивысшей оценки.'],
+      [7,  b2Id, 5, 'Дерево просто идеально. Детализация невероятная, материалы работают из коробки.'],
+      [8,  b1Id, 5, 'Готическая кровать отлично вписалась в мой проект, рекомендую!'],
+      [9,  b2Id, 4, 'Люстра очень красивая, качество геометрии на высоте.'],
+      [16, b1Id, 5, 'Лучший парусник на платформе. Детали просто потрясающие.'],
+      [10, b2Id, 5, 'Груши выглядят фотореалистично. Купил для рекламного ролика — идеально.'],
+      [5,  b1Id, 5, 'Электрическая плита отлично детализирована. Сэкономил время на проекте.'],
+      [13, b2Id, 5, 'Рубанок — лучшая покупка этого месяца. Проект выглядит профессионально.'],
+      [11, b1Id, 5, 'Раковина выглядит потрясающе в морской сцене.'],
     ]
     for (const [idx, uid, rating, comment] of reviewsRaw) {
       if (insertedModels[idx]) {
