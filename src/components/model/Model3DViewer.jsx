@@ -8,7 +8,11 @@ import { X, RotateCcw, Box } from 'lucide-react'
 // Подменяем все URL текстур на пустой пиксель — никаких 404 и краша WebGL
 const BLANK_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII='
 const noTexManager = new THREE.LoadingManager()
-noTexManager.setURLModifier(() => BLANK_PNG)
+noTexManager.setURLModifier(url => {
+  // Перехватываем только текстуры, FBX-файл пропускаем как есть
+  if (/\.(jpe?g|png|exr|tga|bmp|hdr|tiff?)(\?.*)?$/i.test(url)) return BLANK_PNG
+  return url
+})
 
 const neutralMat = new THREE.MeshStandardMaterial({
   color: '#94a3b8',
