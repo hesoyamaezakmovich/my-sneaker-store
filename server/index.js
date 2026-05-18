@@ -13,6 +13,7 @@ const supportRouter = require('./routes/support')
 const paymentsRouter = require('./routes/payments')
 const uploadRouter = require('./routes/upload')
 const mediaRouter  = require('./routes/media')
+const filesRouter  = require('./routes/files')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -39,6 +40,7 @@ app.use('/api/support', supportRouter)
 app.use('/api/payments', paymentsRouter)
 app.use('/api/upload', uploadRouter)
 app.use('/api/media',  mediaRouter)
+app.use('/api/files',  filesRouter)
 
 // Health check
 app.get('/api/health', (req, res) => {
