@@ -42,6 +42,7 @@ router.post('/image', authenticate, requireRole('admin'), upload.single('file'),
       Key:         key,
       Body:        req.file.buffer,
       ContentType: req.file.mimetype,
+      ACL:         'public-read',
     }))
 
     const url = `${S3_PUBLIC_URL}/${S3_BUCKET}/${key}`
@@ -67,6 +68,7 @@ router.post('/model', authenticate, requireRole('admin'), upload.single('file'),
       Key:         key,
       Body:        req.file.buffer,
       ContentType: req.file.mimetype || 'application/octet-stream',
+      ACL:         'public-read',
     }))
 
     const url = `${S3_PUBLIC_URL}/${S3_BUCKET}/${key}`

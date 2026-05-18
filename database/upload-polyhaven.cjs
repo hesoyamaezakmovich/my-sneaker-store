@@ -66,7 +66,7 @@ async function fetchJson(url) {
 }
 
 async function uploadS3(key, buffer, ct) {
-  await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buffer, ContentType: ct }))
+  await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: buffer, ContentType: ct, ACL: 'public-read' }))
   return `${PUBLIC_URL}/${BUCKET}/${key}`
 }
 
