@@ -60,6 +60,8 @@ function LoadingFallback() {
 
 export default function Model3DViewer({ modelUrl, title }) {
   const [open, setOpen] = useState(false)
+  const [canvasReady, setCanvasReady] = useState(false)
+  const [canvasKey, setCanvasKey] = useState(0)
   const [error, setError] = useState(false)
   const controlsRef = useRef()
 
@@ -68,16 +70,26 @@ export default function Model3DViewer({ modelUrl, title }) {
   const isFbx = modelUrl.toLowerCase().includes('.fbx')
   if (!isFbx) return null
 
+  const handleOpen = () => {
+    setError(false)
+    setCanvasReady(false)
+    setOpen(true)
+    // Даём браузеру один кадр освободить старый WebGL-контекст,
+    // затем монтируем Canvas с новым ключом
+    requestAnimationFrame(() => {
+      setCanvasKey(k => k + 1)
+      setCanvasReady(true)
+    })
+  }
+
   const resetCamera = () => {
-    if (controlsRef.current) {
-      controlsRef.current.reset()
-    }
+    if (controlsRef.current) controlsRef.current.reset()
   }
 
   return (
     <>
       <button
-        onClick={() => { setOpen(true); setError(false) }}
+        onClick={handleOpen}
         className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/60 transition-all text-sm font-medium"
       >
         <Box className="w-4 h-4" />
@@ -120,8 +132,9 @@ export default function Model3DViewer({ modelUrl, title }) {
                   <Box className="w-12 h-12 opacity-30" />
                   <p className="text-sm">Не удалось загрузить 3D модель</p>
                 </div>
-              ) : (
+              ) : canvasReady ? (
                 <Canvas
+                  key={canvasKey}
                   camera={{ position: [0, 1, 4], fov: 50 }}
                   shadows
                   gl={{ antialias: true }}
@@ -156,6 +169,10 @@ export default function Model3DViewer({ modelUrl, title }) {
                     <meshStandardMaterial color="#1e293b" roughness={0.8} />
                   </mesh>
                 </Canvas>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                </div>
               )}
             </div>
 
