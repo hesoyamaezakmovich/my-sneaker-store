@@ -19,8 +19,8 @@ const s3 = new S3Client({
   forcePathStyle: true,
 })
 
-const S3_BUCKET  = process.env.S3_BUCKET
-const S3_PUBLIC_URL = process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT
+const S3_BUCKET    = process.env.S3_BUCKET
+const MEDIA_PREFIX = (process.env.FRONTEND_URL || '').replace(/\/$/, '') + '/api/media'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -45,7 +45,7 @@ router.post('/image', authenticate, requireRole('admin'), upload.single('file'),
       ACL:         'public-read',
     }))
 
-    const url = `${S3_PUBLIC_URL}/${S3_BUCKET}/${key}`
+    const url = `${MEDIA_PREFIX}/${key}`
     res.json({ url })
   } catch (err) {
     console.error('Upload image error:', err.message)
@@ -71,7 +71,7 @@ router.post('/model', authenticate, requireRole('admin'), upload.single('file'),
       ACL:         'public-read',
     }))
 
-    const url = `${S3_PUBLIC_URL}/${S3_BUCKET}/${key}`
+    const url = `${MEDIA_PREFIX}/${key}`
     res.json({ url, originalName: req.file.originalname, format: ext.replace('.', '').toUpperCase() })
   } catch (err) {
     console.error('Upload model error:', err.message)

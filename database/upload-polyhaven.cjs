@@ -31,7 +31,10 @@ const s3 = new S3Client({
   forcePathStyle: true,
 })
 const BUCKET     = process.env.S3_BUCKET
-const PUBLIC_URL = (process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT).replace(/\/$/, '')
+const _base      = (process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT).replace(/\/$/, '')
+const PUBLIC_URL = process.env.S3_TENANT_ID && !_base.includes(process.env.S3_TENANT_ID)
+  ? `${_base}/${process.env.S3_TENANT_ID}`
+  : _base
 
 const WANT = 20
 
