@@ -4,12 +4,20 @@ import { OrbitControls, Environment, useFBX } from '@react-three/drei'
 import * as THREE from 'three'
 import { X, RotateCcw, ZoomIn, Box } from 'lucide-react'
 
+const neutralMat = new THREE.MeshStandardMaterial({
+  color: '#94a3b8',
+  roughness: 0.6,
+  metalness: 0.15,
+  side: THREE.DoubleSide,
+})
+
 function FBXScene({ url }) {
   const fbx = useFBX(url)
   const ref = useRef()
 
   useEffect(() => {
     if (!ref.current) return
+
     const box = new THREE.Box3().setFromObject(ref.current)
     const center = box.getCenter(new THREE.Vector3())
     const size = box.getSize(new THREE.Vector3())
@@ -18,12 +26,12 @@ function FBXScene({ url }) {
     ref.current.position.sub(center)
     if (maxDim > 0) ref.current.scale.setScalar(2 / maxDim)
 
+    // Заменяем все материалы на нейтральный — избегаем 404 текстур и крэша WebGL
     ref.current.traverse(child => {
       if (child.isMesh) {
+        child.material = neutralMat
         child.castShadow = true
         child.receiveShadow = true
-        if (!child.material || Array.isArray(child.material)) return
-        child.material.side = THREE.DoubleSide
       }
     })
   }, [fbx])
