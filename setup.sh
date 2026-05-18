@@ -66,6 +66,12 @@ FRONTEND_URL=https://$SSLIP_DOMAIN
 DOWNLOAD_LINK_TTL_HOURS=72
 YOOKASSA_SHOP_ID=1357810
 YOOKASSA_SECRET_KEY=test_d0jpXDsrgZyelapNlk7EVX_vTA-YHQpTIsc5aL7a1IM
+S3_ENDPOINT=https://s3.cloud.ru
+S3_REGION=ru-central-1
+S3_BUCKET=bucket-24661a
+S3_PUBLIC_URL=https://s3.cloud.ru
+S3_ACCESS_KEY_ID=ЗАМЕНИ_НА_СВОЙ_KEY_ID
+S3_SECRET_ACCESS_KEY=ЗАМЕНИ_НА_СВОЙ_SECRET_KEY
 EOF
 
 # Зависимости фронтенда и сборка

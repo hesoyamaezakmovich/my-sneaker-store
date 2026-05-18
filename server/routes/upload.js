@@ -1,22 +1,29 @@
 const express = require('express')
-const multer = require('multer')
+const multer  = require('multer')
 const { v4: uuidv4 } = require('uuid')
-const path = require('path')
-const fs = require('fs')
+const path    = require('path')
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3')
 const { authenticate, requireRole } = require('../middleware/auth')
 
 const router = express.Router()
 
-const UPLOADS_DIR = path.join(__dirname, '../../uploads')
-fs.mkdirSync(path.join(UPLOADS_DIR, 'images'), { recursive: true })
-fs.mkdirSync(path.join(UPLOADS_DIR, 'models'), { recursive: true })
+const s3 = new S3Client({
+  endpoint: process.env.S3_ENDPOINT,
+  region:   process.env.S3_REGION || 'ru-central-1',
+  credentials: {
+    accessKeyId:     process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  },
+  forcePathStyle: true,
+})
+
+const S3_BUCKET  = process.env.S3_BUCKET
+const S3_PUBLIC_URL = process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 100 * 1024 * 1024 },
+  limits:  { fileSize: 500 * 1024 * 1024 },
 })
-
-const BASE_URL = process.env.FRONTEND_URL || 'http://localhost:3001'
 
 // POST /api/upload/image
 router.post('/image', authenticate, requireRole('admin'), upload.single('file'), async (req, res) => {
@@ -24,15 +31,18 @@ router.post('/image', authenticate, requireRole('admin'), upload.single('file'),
     if (!req.file) return res.status(400).json({ error: 'Файл не передан' })
 
     const ext = path.extname(req.file.originalname).toLowerCase()
-    const allowed = ['.jpg', '.jpeg', '.png', '.webp']
-    if (!allowed.includes(ext)) {
+    if (!['.jpg', '.jpeg', '.png', '.webp'].includes(ext))
       return res.status(400).json({ error: 'Только JPG, PNG, WebP' })
-    }
 
-    const filename = `${uuidv4()}${ext}`
-    fs.writeFileSync(path.join(UPLOADS_DIR, 'images', filename), req.file.buffer)
+    const key = `images/${uuidv4()}${ext}`
+    await s3.send(new PutObjectCommand({
+      Bucket:      S3_BUCKET,
+      Key:         key,
+      Body:        req.file.buffer,
+      ContentType: req.file.mimetype,
+    }))
 
-    const url = `${BASE_URL}/api/uploads/images/${filename}`
+    const url = `${S3_PUBLIC_URL}/${S3_BUCKET}/${key}`
     res.json({ url })
   } catch (err) {
     console.error('Upload image error:', err.message)
@@ -46,15 +56,18 @@ router.post('/model', authenticate, requireRole('admin'), upload.single('file'),
     if (!req.file) return res.status(400).json({ error: 'Файл не передан' })
 
     const ext = path.extname(req.file.originalname).toLowerCase()
-    const allowed = ['.fbx', '.obj', '.glb', '.gltf', '.stl', '.blend', '.zip']
-    if (!allowed.includes(ext)) {
+    if (!['.fbx', '.obj', '.glb', '.gltf', '.stl', '.blend', '.zip'].includes(ext))
       return res.status(400).json({ error: 'Неподдерживаемый формат 3D файла' })
-    }
 
-    const filename = `${uuidv4()}${ext}`
-    fs.writeFileSync(path.join(UPLOADS_DIR, 'models', filename), req.file.buffer)
+    const key = `models/${uuidv4()}${ext}`
+    await s3.send(new PutObjectCommand({
+      Bucket:      S3_BUCKET,
+      Key:         key,
+      Body:        req.file.buffer,
+      ContentType: req.file.mimetype || 'application/octet-stream',
+    }))
 
-    const url = `${BASE_URL}/api/uploads/models/${filename}`
+    const url = `${S3_PUBLIC_URL}/${S3_BUCKET}/${key}`
     res.json({ url, originalName: req.file.originalname, format: ext.replace('.', '').toUpperCase() })
   } catch (err) {
     console.error('Upload model error:', err.message)
