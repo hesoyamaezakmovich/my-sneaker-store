@@ -86,22 +86,45 @@ const CountUp = ({ target, suffix }) => {
   return <span ref={ref}>{count}{suffix}</span>
 }
 
-/* ─── CSS 3D Cube (draggable) ─── */
+// Quaternion helpers — no gimbal lock
+const qMul = (a, b) => [
+  a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3],
+  a[0]*b[1] + a[1]*b[0] + a[2]*b[3] - a[3]*b[2],
+  a[0]*b[2] - a[1]*b[3] + a[2]*b[0] + a[3]*b[1],
+  a[0]*b[3] + a[1]*b[2] - a[2]*b[1] + a[3]*b[0],
+]
+const qNorm = (q) => {
+  const len = Math.sqrt(q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2)
+  return q.map(v => v / len)
+}
+const qToMatrix3d = ([w, x, y, z]) =>
+  `matrix3d(${1-2*(y*y+z*z)},${2*(x*y+w*z)},${2*(x*z-w*y)},0,` +
+  `${2*(x*y-w*z)},${1-2*(x*x+z*z)},${2*(y*z+w*x)},0,` +
+  `${2*(x*z+w*y)},${2*(y*z-w*x)},${1-2*(x*x+y*y)},0,` +
+  `0,0,0,1)`
+
+/* ─── CSS 3D Cube (draggable, quaternion-based) ─── */
 const Cube3D = () => {
   const wrapRef  = useRef(null)
-  const rotX     = useRef(18)
-  const rotY     = useRef(0)
   const dragging = useRef(false)
   const lastPos  = useRef({ x: 0, y: 0 })
   const rafId    = useRef(null)
   const [grab, setGrab] = useState(false)
+  // Initial quaternion: 18° tilt around X axis
+  const a0 = 18 * Math.PI / 180
+  const qRef = useRef([Math.cos(a0/2), Math.sin(a0/2), 0, 0])
 
   useEffect(() => {
+    // Auto-rotate ~18°/s around world Y axis
+    const AUTO = 0.3 * Math.PI / 180
+    const autoQ = [Math.cos(AUTO/2), 0, Math.sin(AUTO/2), 0]
+    if (wrapRef.current)
+      wrapRef.current.style.transform = qToMatrix3d(qRef.current)
     const tick = () => {
       if (!dragging.current) {
-        rotY.current += 0.3
+        qRef.current = qNorm(qMul(autoQ, qRef.current))
         if (wrapRef.current)
-          wrapRef.current.style.transform = `rotateX(${rotX.current}deg) rotateY(${rotY.current}deg)`
+          wrapRef.current.style.transform = qToMatrix3d(qRef.current)
       }
       rafId.current = requestAnimationFrame(tick)
     }
@@ -121,10 +144,18 @@ const Cube3D = () => {
     const dx = e.clientX - lastPos.current.x
     const dy = e.clientY - lastPos.current.y
     lastPos.current = { x: e.clientX, y: e.clientY }
-    rotY.current += dx * 0.5
-    rotX.current = Math.max(-75, Math.min(75, rotX.current - dy * 0.5))
+    const dist = Math.sqrt(dx*dx + dy*dy)
+    if (dist < 0.5) return
+    // Axis perpendicular to drag direction in screen space
+    const ax = -dy / dist
+    const ay =  dx / dist
+    const angle = dist * 0.01
+    const s = Math.sin(angle / 2)
+    const dq = [Math.cos(angle / 2), ax*s, ay*s, 0]
+    // World-space rotation: left-multiply so response matches screen
+    qRef.current = qNorm(qMul(dq, qRef.current))
     if (wrapRef.current)
-      wrapRef.current.style.transform = `rotateX(${rotX.current}deg) rotateY(${rotY.current}deg)`
+      wrapRef.current.style.transform = qToMatrix3d(qRef.current)
   }
 
   const onPointerUp = () => {
@@ -151,7 +182,7 @@ const Cube3D = () => {
       >
         <div
           ref={wrapRef}
-          style={{ transformStyle: 'preserve-3d', transform: 'rotateX(18deg) rotateY(0deg)' }}
+          style={{ transformStyle: 'preserve-3d' }}
         >
           <div className="relative w-32 h-32" style={{ transformStyle: 'preserve-3d' }}>
             {/* Front */}
