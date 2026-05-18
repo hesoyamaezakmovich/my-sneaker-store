@@ -1,8 +1,14 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, useFBX } from '@react-three/drei'
+import { Canvas, useLoader } from '@react-three/fiber'
+import { OrbitControls, Environment } from '@react-three/drei'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import * as THREE from 'three'
-import { X, RotateCcw, ZoomIn, Box } from 'lucide-react'
+import { X, RotateCcw, Box } from 'lucide-react'
+
+// Подменяем все URL текстур на пустой пиксель — никаких 404 и краша WebGL
+const BLANK_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII='
+const noTexManager = new THREE.LoadingManager()
+noTexManager.setURLModifier(() => BLANK_PNG)
 
 const neutralMat = new THREE.MeshStandardMaterial({
   color: '#94a3b8',
@@ -12,7 +18,7 @@ const neutralMat = new THREE.MeshStandardMaterial({
 })
 
 function FBXScene({ url }) {
-  const fbx = useFBX(url)
+  const fbx = useLoader(FBXLoader, url, loader => { loader.manager = noTexManager })
   const ref = useRef()
 
   useEffect(() => {
