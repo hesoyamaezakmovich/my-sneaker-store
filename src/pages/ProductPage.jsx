@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchModelById, fetchSimilarModels } from '../services/models.service'
 import { useAuth } from '../hooks/useAuth'
 import { useAddToCart } from '../hooks/useCartMutations'
 import { useUserQuery } from '../hooks/useUserQuery'
 import ModelList from '../components/model/ModelList'
+const Model3DViewer = lazy(() => import('../components/model/Model3DViewer'))
 import Button from '../components/ui/Button'
 import { Download, Star, Eye, ShoppingCart, Heart, ArrowLeft, FileType, User } from 'lucide-react'
 import { MODEL_FORMAT_LABELS, LICENSE_TYPE_LABELS } from '../utils/constants'
@@ -195,7 +196,7 @@ const ModelPage = () => {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 mb-3">
             <Button
               variant="primary"
               size="large"
@@ -207,6 +208,13 @@ const ModelPage = () => {
               {addToCartMutation.isPending ? 'Добавляем...' : 'В корзину'}
             </Button>
           </div>
+
+          <Suspense fallback={null}>
+            <Model3DViewer
+              modelUrl={model.files?.find(f => f.file_path)?.file_path}
+              title={model.title}
+            />
+          </Suspense>
 
           <p className="text-xs text-slate-500 mt-3 text-center">
             После оплаты ссылка для скачивания будет активна 72 часа

@@ -16,7 +16,7 @@ const MODEL_SELECT = `
     FILTER (WHERE mi.id IS NOT NULL), '[]'
   ) AS images,
   COALESCE(
-    json_agg(DISTINCT jsonb_build_object('id', mf.id, 'file_format', mf.file_format, 'file_size_bytes', mf.file_size_bytes, 'file_name', mf.file_name))
+    json_agg(DISTINCT jsonb_build_object('id', mf.id, 'file_format', mf.file_format, 'file_size_bytes', mf.file_size_bytes, 'file_name', mf.file_name, 'file_path', mf.file_path))
     FILTER (WHERE mf.id IS NOT NULL), '[]'
   ) AS files,
   COALESCE(
