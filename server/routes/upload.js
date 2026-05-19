@@ -28,7 +28,7 @@ const upload = multer({
 })
 
 // POST /api/upload/image
-router.post('/image', authenticate, requireRole('admin'), upload.single('file'), async (req, res) => {
+router.post('/image', authenticate, requireRole('admin', 'author'), upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Файл не передан' })
 
@@ -54,7 +54,7 @@ router.post('/image', authenticate, requireRole('admin'), upload.single('file'),
 })
 
 // POST /api/upload/model
-router.post('/model', authenticate, requireRole('admin'), upload.single('file'), async (req, res) => {
+router.post('/model', authenticate, requireRole('admin', 'author'), upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Файл не передан' })
 
