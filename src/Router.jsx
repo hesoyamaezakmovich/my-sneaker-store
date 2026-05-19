@@ -24,6 +24,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
 const AuthorCabinetPage = lazy(() => import('./pages/AuthorCabinetPage'))
+const AuthorModelEditPage = lazy(() => import('./pages/AuthorModelEditPage'))
 
 // Административные страницы
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
@@ -62,6 +63,8 @@ function Router() {
             <Route path="orders" element={<OrdersPage />} />
             <Route path="favorites" element={<FavoritesPage />} />
             <Route path="author" element={<AuthorCabinetPage />} />
+            <Route path="author/models/new" element={<AuthorModelEditPage />} />
+            <Route path="author/models/:id/edit" element={<AuthorModelEditPage />} />
           </Route>
 
           <Route path="404" element={<NotFoundPage />} />
