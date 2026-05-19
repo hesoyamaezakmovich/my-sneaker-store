@@ -18,6 +18,9 @@ const s3 = new S3Client({
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || process.env.S3_SECRET_KEY_ID,
   },
   forcePathStyle: true,
+  // Отключаем автоматическую контрольную сумму CRC32 — она ломает CORS preflight
+  requestChecksumCalculation: 'when_required',
+  responseChecksumValidation: 'when_required',
 })
 
 const S3_BUCKET    = process.env.S3_BUCKET
@@ -98,11 +101,13 @@ router.get('/model-presign', authenticate, requireRole('admin', 'author'), async
       Bucket:      S3_BUCKET,
       Key:         key,
       ContentType: 'application/octet-stream',
-      ACL:         'public-read',
     })
 
-    // presigned URL действует 15 минут
-    const presignedUrl = await getSignedUrl(s3, command, { expiresIn: 900 })
+    // unhoistableHeaders убирает x-amz-acl и checksum из URL — иначе CORS preflight падает
+    const presignedUrl = await getSignedUrl(s3, command, {
+      expiresIn: 900,
+      unhoistableHeaders: new Set([]),
+    })
     const resultUrl = `${MEDIA_PREFIX}/${key}`
 
     res.json({ presignedUrl, url: resultUrl, key, originalName: filename, format: ext.replace('.', '').toUpperCase() })

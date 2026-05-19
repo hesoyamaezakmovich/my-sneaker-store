@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
+const { S3Client, PutBucketCorsCommand } = require('@aws-sdk/client-s3')
 
 const authRouter = require('./routes/auth')
 const modelsRouter = require('./routes/models')
@@ -60,6 +61,46 @@ app.use((err, req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 RKS 3D Marketplace API запущен на http://localhost:${PORT}`)
+  applyS3Cors()
 })
+
+async function applyS3Cors() {
+  const frontendUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '')
+  if (!process.env.S3_BUCKET || !frontendUrl) return
+
+  const s3 = new S3Client({
+    endpoint: process.env.S3_ENDPOINT,
+    region: process.env.S3_REGION || 'ru-central-1',
+    credentials: {
+      accessKeyId: process.env.S3_TENANT_ID
+        ? `${process.env.S3_TENANT_ID}:${process.env.S3_ACCESS_KEY_ID}`
+        : process.env.S3_ACCESS_KEY_ID,
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || process.env.S3_SECRET_KEY_ID,
+    },
+    forcePathStyle: true,
+    requestChecksumCalculation: 'when_required',
+    responseChecksumValidation: 'when_required',
+  })
+
+  try {
+    await s3.send(new PutBucketCorsCommand({
+      Bucket: process.env.S3_BUCKET,
+      CORSConfiguration: {
+        CORSRules: [
+          {
+            AllowedOrigins: [frontendUrl],
+            AllowedMethods: ['GET', 'PUT', 'HEAD'],
+            AllowedHeaders: ['*'],
+            ExposeHeaders: ['ETag'],
+            MaxAgeSeconds: 300,
+          },
+        ],
+      },
+    }))
+    console.log('✅ S3 CORS настроен для', frontendUrl)
+  } catch (err) {
+    console.error('⚠️  Не удалось настроить S3 CORS:', err.message)
+  }
+}
 
 module.exports = app
