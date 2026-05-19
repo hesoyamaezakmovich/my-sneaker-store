@@ -6,6 +6,7 @@ import api from '../services/api'
 import toast from 'react-hot-toast'
 import { LICENSE_TYPE_LABELS } from '../utils/constants'
 import { useUserQuery } from '../hooks/useUserQuery'
+import { uploadModelDirect } from '../utils/uploadModel'
 
 const AuthorModelEditPage = () => {
   const { id } = useParams()
@@ -93,12 +94,8 @@ const AuthorModelEditPage = () => {
     if (!file) return
     setUploadingModel(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const { data } = await api.post('/upload/model', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      setModelFile({ url: data.url, name: data.originalName, format: data.format })
+      const result = await uploadModelDirect(file)
+      setModelFile({ url: result.url, name: result.originalName, format: result.format })
       toast.success('3D файл загружен')
     } catch {
       toast.error('Ошибка загрузки 3D файла')
